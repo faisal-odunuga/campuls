@@ -41,7 +41,7 @@ export default async function AssignmentsPage({
       userName={session.user.name ?? 'Campuls User'}
       userSubtitle={`${session.user.role ?? 'student'}${session.user.level ? ` • ${session.user.level}` : ''}`}
     >
-      <main className="mx-auto max-w-lg space-y-8 px-6 py-6 pb-24 md:max-w-3xl">
+      <main className="mx-auto max-w-lg space-y-8 md:max-w-3xl">
         <section className="mb-8">
           <p className="mb-1 font-['Inter'] text-[10px] font-medium tracking-wide text-slate-500 uppercase">
             Academic Control
