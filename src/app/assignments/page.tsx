@@ -7,7 +7,7 @@ import { redirect } from 'next/navigation';
 export default async function AssignmentsPage({
   searchParams
 }: {
-  searchParams?: { q?: string | string[] };
+  searchParams?: Promise<{ q?: string | string[] }>;
 }) {
   const session = await auth();
   if (!session) {
@@ -15,7 +15,9 @@ export default async function AssignmentsPage({
   }
 
   const snapshot = await getDepartmentSnapshot(session.supabaseAccessToken);
-  const query = typeof searchParams?.q === 'string' ? searchParams.q.trim().toLowerCase() : '';
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  const query =
+    typeof resolvedSearchParams?.q === 'string' ? resolvedSearchParams.q.trim().toLowerCase() : '';
   const filteredAssignments = query
     ? snapshot.assignments
         .map((group) => ({
