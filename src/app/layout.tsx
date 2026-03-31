@@ -28,6 +28,12 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   return (
     <html className="light" lang="en">
       <body>
+        <a
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-primary focus:px-4 focus:py-2 focus:text-on-primary"
+          href="#main-content"
+        >
+          Skip to content
+        </a>
         <Providers session={session}>
           <PwaBoot />
           {children}

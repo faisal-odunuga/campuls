@@ -2,6 +2,7 @@ import { auth } from '@/auth';
 import { AppChrome } from '@/components/app-chrome';
 import { getUserProfile } from '@/lib/supabase/queries';
 import { Pencil, Settings2 } from 'lucide-react';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 export default async function ProfilePage() {
@@ -43,9 +44,9 @@ export default async function ProfilePage() {
                     '/icon.svg'
                   }
                 />
-                <button className="absolute bottom-0 right-0 rounded-full bg-primary p-2 text-white shadow-lg" type="button">
+                <Link aria-label="Edit profile" className="absolute bottom-0 right-0 rounded-full bg-primary p-2 text-white shadow-lg" href="/profile#edit">
                   <Pencil className="h-4 w-4" />
-                </button>
+                </Link>
               </div>
               <h2 className="font-headline text-2xl font-bold text-on-surface">{displayName}</h2>
               <p className="mb-4 text-sm font-medium text-on-surface-variant">{roleLabel}</p>

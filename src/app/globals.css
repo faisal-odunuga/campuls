@@ -12,6 +12,12 @@ html {
   scroll-behavior: smooth;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
 body {
   background: #f9f9fb;
   color: #1a1c1d;
@@ -26,7 +32,8 @@ body {
 }
 
 ::selection {
-  background: rgba(76, 86, 175, 0.18);
+  background: #4c56af;
+  color: #ffffff;
 }
 
 .no-scrollbar::-webkit-scrollbar {
@@ -44,9 +51,17 @@ body {
   -webkit-backdrop-filter: blur(12px);
 }
 
-.pulse-signal {
-  box-shadow: 0 0 0 0 rgba(148, 249, 144, 0.4);
-  animation: pulse 3s infinite;
+@media (prefers-reduced-motion: no-preference) {
+  .pulse-signal {
+    box-shadow: 0 0 0 0 rgba(148, 249, 144, 0.4);
+    animation: pulse 3s infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse-signal {
+    animation: none;
+  }
 }
 
 @keyframes pulse {

@@ -10,7 +10,12 @@ export async function POST() {
   }
 
   const supabase = await createClient(session.supabaseAccessToken);
-  await supabase.auth.signOut({ scope: 'local' });
+  const result = await supabase.auth.signOut({ scope: 'local' });
+
+  if (result.error) {
+    console.error('Supabase sign-out failed', result.error);
+    return NextResponse.json({ ok: false, error: result.error.message }, { status: 500 });
+  }
 
   return NextResponse.json({ ok: true });
 }

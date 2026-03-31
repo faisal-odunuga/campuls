@@ -65,28 +65,49 @@ export async function seedOfflineCollections() {
 }
 
 export async function saveSessionToken(token: string, role: 'student' | 'hoc') {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
   const db = await getDb();
   await db.put('session', { token, role, updatedAt: Date.now() }, 'jwt');
 }
 
 export async function readSessionToken() {
+  if (typeof window === 'undefined') {
+    return undefined;
+  }
+
   const db = await getDb();
   return db.get('session', 'jwt');
 }
 
 export async function cacheRows(store: 'timetable' | 'assignments' | 'notes', rows: OfflineRow[]) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
   const db = await getDb();
   const tx = db.transaction(store, 'readwrite');
+  await tx.store.clear();
   await Promise.all(rows.map((row) => tx.store.put(row)));
   await tx.done;
 }
 
 export async function readRows(store: 'timetable' | 'assignments' | 'notes') {
+  if (typeof window === 'undefined') {
+    return [];
+  }
+
   const db = await getDb();
   return db.getAll(store);
 }
 
 export async function queueMutation(kind: string, payload: Record<string, unknown>) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
   const db = await getDb();
   await db.put('queued_mutations', {
     id: crypto.randomUUID(),
@@ -97,6 +118,19 @@ export async function queueMutation(kind: string, payload: Record<string, unknow
 }
 
 export async function readQueuedMutations() {
+  if (typeof window === 'undefined') {
+    return [];
+  }
+
   const db = await getDb();
   return db.getAll('queued_mutations');
+}
+
+export async function deleteQueuedMutation(id: string) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  const db = await getDb();
+  await db.delete('queued_mutations', id);
 }

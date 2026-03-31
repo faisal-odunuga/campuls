@@ -28,7 +28,6 @@ const authConfig: NextAuthConfig = {
       async authorize(credentials) {
         const email = String(credentials?.email ?? '').trim();
         const password = String(credentials?.password ?? '');
-        const requestedRole = String(credentials?.role ?? 'student') === 'hoc' ? 'hoc' : 'student';
 
         if (!email || !password) {
           return null;
@@ -55,7 +54,7 @@ const authConfig: NextAuthConfig = {
           return null;
         }
 
-        let role = requestedRole;
+        let role: 'student' | 'hoc' = 'student';
         let level: number | null = null;
         let displayName = data.user.user_metadata?.name ?? data.user.email ?? email;
 
@@ -76,7 +75,7 @@ const authConfig: NextAuthConfig = {
 
           if (profile) {
             displayName = profile.name ?? displayName;
-            role = profile.role === 'hoc' ? 'hoc' : role;
+            role = profile.role === 'hoc' ? 'hoc' : 'student';
             level = typeof profile.level === 'number' ? profile.level : null;
           }
         }
@@ -144,7 +143,7 @@ const authConfig: NextAuthConfig = {
       }
 
       session.supabaseAccessToken = token.supabaseAccessToken as string | undefined;
-      session.supabaseExpiresAt = token.supabaseExpiresAt as number | undefined;
+      session.supabaseExpiresAt = (token.supabaseExpiresAt as number | null | undefined) ?? null;
 
       return session;
     }

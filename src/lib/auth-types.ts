@@ -4,7 +4,7 @@ import type { JWT } from 'next-auth/jwt';
 declare module 'next-auth' {
   interface Session {
     supabaseAccessToken?: string;
-    supabaseExpiresAt?: number;
+    supabaseExpiresAt?: number | null;
     user: {
       id?: string;
       role?: 'student' | 'hoc';

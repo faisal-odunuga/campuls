@@ -13,6 +13,19 @@ export default async function CourseDetailPage() {
 
   const snapshot = await getDepartmentSnapshot(session.supabaseAccessToken);
   const active = snapshot.activeSession;
+  const totalSessions = snapshot.timetable.length;
+  const attendedCount = snapshot.timetable.filter(
+    (row) => row.status === 'ONGOING' || row.status === 'COMPLETED'
+  ).length;
+  const attendancePercent = totalSessions > 0 ? Math.round((attendedCount / totalSessions) * 100) : null;
+  const attendanceLabel =
+    attendancePercent === null
+      ? 'Empty'
+      : attendancePercent >= 85
+        ? 'Excellent'
+        : attendancePercent >= 70
+          ? 'Good'
+          : 'Poor';
 
   return (
     <AppChrome
@@ -45,10 +58,10 @@ export default async function CourseDetailPage() {
               <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Attendance</span>
               <div className="flex items-end justify-between">
                 <span className="font-headline text-4xl font-extrabold text-primary">
-                  {snapshot.timetable.length ? '94%' : '--'}
+                  {attendancePercent === null ? '--' : `${attendancePercent}%`}
                 </span>
                 <span className="rounded-full bg-secondary-container px-2 py-1 text-[10px] font-bold text-on-secondary-container uppercase">
-                  {active ? 'Excellent' : 'Empty'}
+                  {attendanceLabel}
                 </span>
               </div>
             </div>
@@ -94,22 +107,22 @@ export default async function CourseDetailPage() {
               </div>
             ) : null}
             
-            {!active && snapshot.timetable.map((session) => (
-              <div key={session.id} className="rounded-xl bg-surface-container-low p-5">
+            {!active && snapshot.timetable.map((timetableEntry) => (
+              <div key={timetableEntry.id} className="rounded-xl bg-surface-container-low p-5">
                 <div className="mb-3 flex items-start justify-between">
                   <div className="flex flex-col">
-                    <span className="text-xs font-bold uppercase tracking-widest text-slate-500">{session.day}</span>
-                    <h3 className="font-headline text-base font-semibold text-on-surface">{session.title}</h3>
+                    <span className="text-xs font-bold uppercase tracking-widest text-slate-500">{timetableEntry.day}</span>
+                    <h3 className="font-headline text-base font-semibold text-on-surface">{timetableEntry.title}</h3>
                   </div>
                 </div>
                 <div className="flex items-center gap-4 text-sm text-on-surface-variant">
                   <div className="flex items-center gap-1">
                     <Clock3 className="h-4 w-4" />
-                    <span>{session.time}</span>
+                    <span>{timetableEntry.time}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <MapPin className="h-4 w-4" />
-                    <span>{session.venue}</span>
+                    <span>{timetableEntry.venue}</span>
                   </div>
                 </div>
               </div>

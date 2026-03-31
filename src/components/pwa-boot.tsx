@@ -21,19 +21,22 @@ export function PwaBoot() {
 
         const keys = await caches.keys();
         await Promise.all(keys.filter((key) => key.startsWith('campusos-')).map((key) => caches.delete(key)));
-      }
 
-      if (session?.supabaseAccessToken && session?.user?.role) {
-        await saveSessionToken(session.supabaseAccessToken, session.user.role);
-      }
-    })()
-      .then(() => {
-        if ('serviceWorker' in navigator) {
-          return navigator.serviceWorker.register('/sw.js').catch(() => undefined);
+        try {
+          await navigator.serviceWorker.register('/sw.js');
+        } catch (error) {
+          console.error('Failed to register service worker', error);
         }
-        return undefined;
-      })
-      .catch(() => undefined);
+      }
+    })().catch((error) => {
+      console.error('PWA boot effect failed', error);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (session?.supabaseAccessToken && session?.user?.role) {
+      void saveSessionToken(session.supabaseAccessToken, session.user.role);
+    }
   }, [session?.supabaseAccessToken, session?.user?.role]);
 
   return null;

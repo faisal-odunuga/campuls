@@ -117,7 +117,7 @@ export default async function MaterialsPage() {
           <div className='grid grid-cols-1 gap-6 md:grid-cols-3'>
             {snapshot.materials.slice(0, 3).map((material) => (
               <div
-                key={material.title}
+                key={material.id}
                 className='group rounded-xl bg-surface-container-lowest p-6 shadow-sm transition-all duration-300 hover:bg-surface-container'
               >
                 <div className='mb-4 flex items-start justify-between'>
@@ -146,8 +146,10 @@ export default async function MaterialsPage() {
           <h3 className='mb-4 font-headline text-xl font-bold text-on-surface'>Course Modules</h3>
           {moduleCourses.length ? (
             moduleCourses.map((course) => {
+              const courseCode = course.includes(' • ') ? course.split(' • ')[0] : course;
+              const courseName = course.includes(' • ') ? course.split(' • ')[1] : course;
               const courseMaterials = snapshot.materials.filter((material) =>
-                material.course.startsWith(course),
+                material.course.startsWith(courseCode),
               );
 
               return (
@@ -160,22 +162,22 @@ export default async function MaterialsPage() {
                       <div className='flex h-12 w-12 items-center justify-center rounded-xl bg-surface-container-lowest text-primary shadow-sm'>
                         <FolderOpen className='h-6 w-6' />
                       </div>
-                      <div>
-                        <h3 className='font-headline text-lg font-bold leading-tight text-primary'>
-                          {course.split(' • ')[0]}
-                        </h3>
-                        <p className='text-xs font-medium text-on-surface-variant'>
-                          {course.split(' • ')[1]} • {courseMaterials.length} Files
-                        </p>
+                        <div>
+                          <h3 className='font-headline text-lg font-bold leading-tight text-primary'>
+                            {courseCode}
+                          </h3>
+                          <p className='text-xs font-medium text-on-surface-variant'>
+                            {courseName} • {courseMaterials.length} Files
+                          </p>
+                        </div>
                       </div>
-                    </div>
                     <ChevronDown className='h-4 w-4 text-outline' />
                   </div>
 
                   <div className='space-y-3 px-5 pb-5 pt-1'>
                     {courseMaterials.map((file) => (
                       <div
-                        key={file.title}
+                        key={file.id}
                         className='group flex items-center justify-between rounded-lg bg-surface-container-lowest p-4'
                       >
                         <div className='flex items-center gap-3'>
@@ -187,12 +189,12 @@ export default async function MaterialsPage() {
                             </p>
                           </div>
                         </div>
-                        <button className='flex h-8 w-8 items-center justify-center rounded-full bg-surface-container text-primary transition-all hover:bg-primary hover:text-white'>
+                        <button className='flex h-8 w-8 items-center justify-center rounded-full bg-surface-container text-primary transition-all hover:bg-primary hover:text-white' type='button'>
                           <Download className='h-4 w-4' />
                         </button>
                       </div>
                     ))}
-                    <button className='mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-3 font-label text-xs font-bold uppercase tracking-widest text-white'>
+                    <button className='mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-3 font-label text-xs font-bold uppercase tracking-widest text-white' type='button'>
                       <Download className='h-4 w-4' />
                       Download All
                     </button>

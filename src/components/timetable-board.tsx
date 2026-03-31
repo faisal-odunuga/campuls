@@ -57,7 +57,26 @@ function statusTone(status: string) {
 }
 
 function getLagosNow() {
-  return new Date(new Date().toLocaleString('en-US', { timeZone: 'Africa/Lagos' }));
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Africa/Lagos',
+    hour12: false,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  }).formatToParts(new Date());
+
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return new Date(
+    Number(values.year),
+    Number(values.month) - 1,
+    Number(values.day),
+    Number(values.hour),
+    Number(values.minute),
+    Number(values.second),
+  );
 }
 
 function getWeekStart(date: Date) {
@@ -68,8 +87,9 @@ function getWeekStart(date: Date) {
   return copy;
 }
 
-function getWeekDates() {
+function getWeekDates(weekOffset = 0) {
   const start = getWeekStart(getLagosNow());
+  start.setDate(start.getDate() + weekOffset * 7);
   return DAY_ORDER.map((day, index) => {
     const date = new Date(start);
     date.setDate(start.getDate() + index);

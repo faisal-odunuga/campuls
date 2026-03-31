@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import {
   ArrowRight,
   Bookmark,
@@ -103,13 +103,18 @@ function SectionShell({ children }: { children: ReactNode }) {
 }
 
 export function UpdatesBoard({ updates }: UpdatesBoardProps) {
-  const featuredUpdate = updates[0];
-  const remainingUpdates = updates.slice(1);
+  const [selectedCategory, setSelectedCategory] = useState<CategoryKey>('all');
 
   const counts = categories.map((category) => ({
     ...category,
     count: getCategoryCount(updates, category.key)
   }));
+  const filteredUpdates =
+    selectedCategory === 'all'
+      ? updates
+      : updates.filter((update) => inferCategory(update) === selectedCategory);
+  const featuredUpdate = filteredUpdates[0];
+  const remainingUpdates = filteredUpdates.slice(1);
 
   return (
     <div className="mx-auto max-w-5xl pb-24">
@@ -140,15 +145,16 @@ export function UpdatesBoard({ updates }: UpdatesBoardProps) {
         </div>
 
         <div className="flex gap-2 overflow-x-auto pb-1">
-          {counts.map((category, index) => (
+          {counts.map((category) => (
             <button
               key={category.key}
               className={[
                 'shrink-0 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all',
-                index === 0
+                selectedCategory === category.key
                   ? 'bg-primary text-on-primary'
                   : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container-highest'
               ].join(' ')}
+              onClick={() => setSelectedCategory(category.key)}
               type="button"
             >
               {category.label}
@@ -164,6 +170,7 @@ export function UpdatesBoard({ updates }: UpdatesBoardProps) {
             <p className="text-xs opacity-70">Department updates and notices</p>
           </div>
           <button
+            aria-label="Direct message HOC"
             className="mt-4 inline-flex items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-sm font-bold transition-all hover:bg-white/20"
             type="button"
           >
@@ -211,6 +218,7 @@ export function UpdatesBoard({ updates }: UpdatesBoardProps) {
                 <p className="font-headline text-lg font-bold">Campuls HOC</p>
                 <p className="text-xs opacity-70">Department updates and notices</p>
                 <button
+                  aria-label="Direct message HOC"
                   className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg border border-white/20 bg-white/10 py-2 text-sm font-bold transition-all hover:bg-white/20"
                   type="button"
                 >
@@ -242,10 +250,10 @@ export function UpdatesBoard({ updates }: UpdatesBoardProps) {
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button className="rounded-full p-2 text-on-surface-variant transition-colors hover:bg-surface-container" type="button">
+                  <button aria-label="Bookmark update" className="rounded-full p-2 text-on-surface-variant transition-colors hover:bg-surface-container" type="button">
                     <Bookmark className="h-4 w-4" />
                   </button>
-                  <button className="rounded-full p-2 text-on-surface-variant transition-colors hover:bg-surface-container" type="button">
+                  <button aria-label="Share update" className="rounded-full p-2 text-on-surface-variant transition-colors hover:bg-surface-container" type="button">
                     <Share2 className="h-4 w-4" />
                   </button>
                 </div>
@@ -261,6 +269,7 @@ export function UpdatesBoard({ updates }: UpdatesBoardProps) {
               <div className="mt-8 flex items-center justify-between border-t border-outline-variant/10 pt-6">
                 <span className="text-xs font-bold uppercase text-on-surface-variant">Department Notice</span>
                 <button
+                  aria-label="Acknowledge notice"
                   className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-secondary"
                   type="button"
                 >
@@ -310,7 +319,7 @@ export function UpdatesBoard({ updates }: UpdatesBoardProps) {
                     <div className="mt-8 border-t border-outline-variant/10 pt-6">
                       <Link
                         className="inline-flex items-center gap-2 rounded-lg bg-surface-container-high px-5 py-2.5 text-sm font-bold text-primary transition-colors hover:bg-surface-variant"
-                        href="/hoc"
+                        href={`/hoc/updates/${update.id}`}
                       >
                         Open Details
                         <ArrowRight className="h-4 w-4" />

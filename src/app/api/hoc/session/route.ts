@@ -71,37 +71,22 @@ export async function POST(request: Request) {
       .eq('id', body.timetableId)
       .maybeSingle();
 
-    if (rowError || !row) {
+    if (rowError) {
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
+
+    if (!row) {
       return NextResponse.json({ error: 'Session not found' }, { status: 404 });
     }
 
     if (action === 'start-session') {
-      const { error: clearError } = await supabase
-        .from('timetable')
-        .update({ status: 'scheduled' })
-        .neq('id', row.id)
-        .eq('status', 'ongoing');
-
-      if (clearError) {
-        return NextResponse.json({ error: clearError.message }, { status: 500 });
-      }
-
-      const { error: updateError } = await supabase
-        .from('timetable')
-        .update({ status: 'ongoing' })
-        .eq('id', row.id);
-
-      if (updateError) {
-        return NextResponse.json({ error: updateError.message }, { status: 500 });
-      }
-
-      const { error: insertError } = await supabase.from('class_sessions').insert({
-        timetable_id: row.id,
-        started_by: profile?.id ?? null
+      const { error: sessionError } = await supabase.rpc('start_class_session', {
+        p_timetable_id: row.id,
+        p_started_by: profile?.id ?? null
       });
 
-      if (insertError) {
-        return NextResponse.json({ error: insertError.message }, { status: 500 });
+      if (sessionError) {
+        return NextResponse.json({ error: sessionError.message }, { status: 500 });
       }
 
       return NextResponse.json({ ok: true });

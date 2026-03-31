@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useMemo, useRef, useState, useTransition } from 'react';
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import {
   Bell,
   CalendarClock,
@@ -37,17 +37,6 @@ const noticeCategories: NoticeCategoryOption[] = [
   { value: 'general', label: 'General', tone: 'neutral' }
 ];
 
-function formatToday() {
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    timeZone: 'Africa/Lagos'
-  })
-    .format(new Date())
-    .toUpperCase();
-}
-
 function getStatusLabel(row: SessionRow) {
   if (row.status === 'ONGOING') return 'Live Now';
   if (row.status === 'UP NEXT' || row.status === 'SCHEDULED') return 'Upcoming';
@@ -58,7 +47,7 @@ function getStatusLabel(row: SessionRow) {
 
 function getCardStyles(row: SessionRow) {
   if (row.status === 'ONGOING') {
-    return 'bg-surface-container-lowest ring-2 ring-secondary/20 shadow-xl shadow-secondary/5';
+    return 'bg-surface-container-lowest p-6 ring-2 ring-secondary/20 shadow-xl shadow-secondary/5';
   }
 
   if (row.status === 'POSTPONED') {
@@ -95,6 +84,7 @@ export function HocConsole({ snapshot }: HocConsoleProps) {
   const [message, setMessage] = useState<string | null>(null);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [todayLabel, setTodayLabel] = useState<string>('');
 
   const activeSession = snapshot.activeSession;
   const todayRows = snapshot.timetable;
@@ -123,6 +113,19 @@ export function HocConsole({ snapshot }: HocConsoleProps) {
     todayRows.find((row) => row.status === 'UP NEXT' || row.status === 'SCHEDULED') ??
     todayRows[0];
 
+  useEffect(() => {
+    setTodayLabel(
+      new Intl.DateTimeFormat('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        timeZone: 'Africa/Lagos'
+      })
+        .format(new Date())
+        .toUpperCase()
+    );
+  }, []);
+
   async function runAction(body: Record<string, string | undefined>, actionId: string, successMessage: string) {
     setPendingAction(actionId);
     setMessage(null);
@@ -147,9 +150,11 @@ export function HocConsole({ snapshot }: HocConsoleProps) {
         router.refresh();
       });
 
-      setNotice('');
-      setNoticeCategory('announcement');
-      setNoticeCourseId('');
+      if (actionId === 'post-notice') {
+        setNotice('');
+        setNoticeCategory('announcement');
+        setNoticeCourseId('');
+      }
       setMessage(successMessage);
     } catch {
       setMessage('Network error. Please try again.');
@@ -233,7 +238,7 @@ export function HocConsole({ snapshot }: HocConsoleProps) {
           <div className="flex items-center justify-between">
             <h3 className="font-headline text-xl font-bold text-on-surface">Today&apos;s Academic Flow</h3>
             <span className="rounded-full bg-primary-fixed px-3 py-1 text-xs font-bold text-primary">
-              {formatToday()}
+              {todayLabel || 'Today'}
             </span>
           </div>
 
@@ -472,9 +477,11 @@ export function HocConsole({ snapshot }: HocConsoleProps) {
                 <p className="text-sm text-on-surface-variant">No notices have been posted yet.</p>
               )}
             </div>
-            <button className="mt-6 w-full text-xs font-bold uppercase tracking-tighter text-primary hover:underline" type="button">
-              View All {snapshot.updates.length} Notices
-            </button>
+            {snapshot.updates.length > 0 ? (
+              <button className="mt-6 w-full text-xs font-bold uppercase tracking-tighter text-primary hover:underline" type="button">
+                View All {snapshot.updates.length} Notices
+              </button>
+            ) : null}
           </section>
         </aside>
       </div>

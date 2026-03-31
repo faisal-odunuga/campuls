@@ -47,7 +47,8 @@ export default async function DashboardPage() {
       <div className="mx-auto max-w-[1400px] ">
         {/* 'Class Started' Signal Banner */}
         <section className="mb-10">
-          <div className="glass-effect pulse-signal flex flex-col justify-between gap-4 rounded-xl border-l-4 border-secondary p-6 md:flex-row md:items-center">
+          {activeSession ? (
+            <div className="glass-effect pulse-signal flex flex-col justify-between gap-4 rounded-xl border-l-4 border-secondary p-6 md:flex-row md:items-center">
             <div className="flex items-center gap-5">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary-container text-on-secondary-container">
                 <Podcast className="h-5 w-5" />
@@ -65,7 +66,7 @@ export default async function DashboardPage() {
               </div>
             </div>
               <div className="flex items-center gap-3">
-                <Link href="/course-detail" className="rounded-lg bg-primary px-6 py-2.5 text-sm font-bold text-on-primary shadow-sm transition-all hover:opacity-90">
+                <Link href={`/course-detail?session=${activeSession.timetableId}`} className="rounded-lg bg-primary px-6 py-2.5 text-sm font-bold text-on-primary shadow-sm transition-all hover:opacity-90">
                   Join Stream
                 </Link>
                 <Link href="/materials" className="rounded-lg bg-surface-container-highest px-6 py-2.5 text-sm font-bold text-primary transition-all hover:bg-surface-dim">
@@ -73,6 +74,14 @@ export default async function DashboardPage() {
               </Link>
             </div>
           </div>
+          ) : (
+            <div className="rounded-xl border-l-4 border-surface-container-highest bg-surface-container-lowest p-6">
+              <h2 className="font-headline text-xl font-bold tracking-tight text-primary">No active session</h2>
+              <p className="mt-2 font-medium text-sm text-on-surface-variant">
+                No classes are scheduled right now. Check timetable updates for the next session.
+              </p>
+            </div>
+          )}
         </section>
 
         {/* Grid Layout */}
@@ -205,7 +214,7 @@ export default async function DashboardPage() {
                       <span className="flex items-center gap-1 text-[10px] font-medium text-on-surface-variant">
                         <Paperclip className="h-3 w-3" /> Pending
                       </span>
-                      <button className="rounded-md bg-surface-container-high px-3 py-1 text-xs font-bold text-primary transition-colors hover:bg-surface-dim">Submit</button>
+                      <button className="rounded-md bg-surface-container-high px-3 py-1 text-xs font-bold text-primary transition-colors hover:bg-surface-dim disabled:cursor-not-allowed disabled:opacity-60" disabled title="Submission workflow coming soon" type="button">Submit</button>
                     </div>
                   </div>
                 ))}

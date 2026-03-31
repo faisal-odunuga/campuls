@@ -30,11 +30,11 @@ export async function POST(request: Request) {
 
   const name = String(payload?.name ?? '').trim();
   const email = String(payload?.email ?? '').trim().toLowerCase();
-  const password = String(payload?.password ?? '');
+  const password = String(payload?.password ?? '').trim();
   const role = payload?.role === 'hoc' ? 'hoc' : 'student';
   const level = typeof payload?.level === 'number' ? payload.level : null;
 
-  if (!name || !email || !password) {
+  if (!name || !email || !password || password.length < 8) {
     return NextResponse.json({ error: 'Name, email, and password are required.' }, { status: 400 });
   }
 

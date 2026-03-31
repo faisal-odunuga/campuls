@@ -18,25 +18,29 @@ export default function LoginPage() {
     setPending(true);
     setError(null);
 
-    const result = await signIn('credentials', {
-      redirect: false,
-      email,
-      password,
-      role,
-    });
+    try {
+      const result = await signIn('credentials', {
+        redirect: false,
+        email,
+        password,
+        role
+      });
 
-    setPending(false);
+      if (result?.error) {
+        setError(
+          result.error === 'CredentialsSignin'
+            ? 'Invalid credentials. Check your email, password, and role, then try again.'
+            : 'Sign-in failed. Check the auth configuration and try again.'
+        );
+        return;
+      }
 
-    if (result?.error) {
-      setError(
-        result.error === 'CredentialsSignin'
-          ? 'Invalid credentials. Check your email, password, and role, then try again.'
-          : 'Sign-in failed. Check the auth configuration and try again.'
-      );
-      return;
+      router.push(role === 'hoc' ? '/hoc' : '/');
+    } catch (error) {
+      setError(`Sign-in failed. ${error instanceof Error ? error.message : 'Please try again.'}`);
+    } finally {
+      setPending(false);
     }
-
-    router.push(role === 'hoc' ? '/hoc' : '/');
   }
 
   return (
@@ -91,6 +95,7 @@ export default function LoginPage() {
                 className='w-full rounded-xl bg-surface-container-highest px-4 py-3 text-sm font-medium outline-none ring-0 transition focus:bg-surface-container-lowest focus:shadow-[0_0_0_2px_rgba(224,224,255,1)]'
                 onChange={(event) => setEmail(event.target.value)}
                 placeholder='alex.rivera@campus.edu'
+                type='email'
                 value={email}
               />
             </label>

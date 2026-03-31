@@ -12,6 +12,7 @@ export default async function AssignmentsPage() {
 
   const snapshot = await getDepartmentSnapshot(session.supabaseAccessToken);
   const totalPending = snapshot.assignments.reduce((total, group) => total + group.items.length, 0);
+  const query = '';
 
   return (
     <AppChrome
@@ -21,7 +22,7 @@ export default async function AssignmentsPage() {
       userName={session.user.name ?? 'Campuls User'}
       userSubtitle={`${session.user.role ?? 'student'}${session.user.level ? ` • ${session.user.level}` : ''}`}
     >
-      <main className="mx-auto max-w-lg px-6 py-6 pb-24 md:max-w-3xl space-y-8">
+      <main className="mx-auto max-w-lg space-y-8 px-6 py-6 pb-24 md:max-w-3xl">
         <section className="mb-8">
           <p className="mb-1 font-['Inter'] text-[10px] font-medium tracking-wide text-slate-500 uppercase">
             Academic Control
@@ -35,19 +36,22 @@ export default async function AssignmentsPage() {
         </section>
 
         {/* Search & Filter Bar (Minimalist) */}
-        <div className="flex gap-2">
+        <form className="flex gap-2" method="get">
           <div className="flex flex-1 items-center gap-3 rounded-xl bg-surface-container px-4 py-3">
             <Search className="h-4 w-4 text-outline" />
             <input
+              aria-label="Filter by course"
               className="w-full border-none bg-transparent p-0 text-sm placeholder:text-outline focus:ring-0"
+              defaultValue={query}
+              name="q"
               placeholder="Filter by course..."
-              type="text"
+              type="search"
             />
           </div>
-          <button className="rounded-xl bg-surface-container-highest p-3">
+          <button aria-label="Open filters" className="rounded-xl bg-surface-container-highest p-3" type="submit">
             <SlidersHorizontal className="h-5 w-5 text-primary" />
           </button>
-        </div>
+        </form>
 
         {/* Assignments Groups */}
         <div className="space-y-10">
@@ -90,16 +94,20 @@ export default async function AssignmentsPage() {
                         </div>
                         
                         <div className="flex items-center justify-between">
-                        <div className={`flex items-center gap-2 ${isUrgent ? 'text-error' : 'text-on-tertiary-fixed-variant'}`}>
+                          <div className={`flex items-center gap-2 ${isUrgent ? 'text-error' : 'text-on-tertiary-fixed-variant'}`}>
                             <Clock3 className="h-4 w-4" />
                             <span className="font-label text-sm font-bold">{item.daysLeft}</span>
                           </div>
                           <button
+                            aria-label={isUrgent ? 'Quick Submit' : 'View Brief'}
                             className={`flex items-center gap-2 rounded-lg px-4 py-2 font-label text-xs font-semibold transition-transform active:scale-95 ${
                               isUrgent
                                 ? 'bg-primary text-on-primary shadow-sm'
                                 : 'bg-surface-container-high text-primary-container'
                             }`}
+                            disabled
+                            title="Submission action not implemented yet"
+                            type="button"
                           >
                             {isUrgent && <UploadCloud className="h-4 w-4" />}
                             {isUrgent ? 'Quick Submit' : 'View Brief'}

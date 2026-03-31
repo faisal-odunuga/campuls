@@ -89,7 +89,7 @@ export function AppChrome({
               <Link
                 key={item.href}
                 className={[
-                  'flex items-center gap-3 rounded-lg px-4 py-3 transition-all duration-200',
+                  'flex items-center gap-3 rounded-lg px-4 py-3 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
                   active
                     ? 'bg-white text-indigo-900 shadow-sm dark:bg-slate-800 dark:text-indigo-100'
                     : 'text-slate-500 hover:bg-slate-200 hover:text-indigo-600 dark:text-slate-400 dark:hover:bg-slate-700'
@@ -105,19 +105,19 @@ export function AppChrome({
 
         <div className="mt-auto space-y-1 border-t border-slate-200 pt-6 dark:border-slate-800">
           <button
-            className="mb-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-primary-container px-4 py-3 text-sm font-bold text-on-primary shadow-sm"
+            className="mb-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-primary-container px-4 py-3 text-sm font-bold text-on-primary shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             onClick={() => router.push('/hoc')}
             type="button"
           >
             <Zap className="h-4 w-4" />
             HOC Console
           </button>
-          <Link className="flex items-center gap-3 px-4 py-3 text-slate-500 transition-all duration-200 hover:text-indigo-600 dark:text-slate-400" href="/profile">
+          <Link className="flex items-center gap-3 px-4 py-3 text-slate-500 transition-all duration-200 hover:text-indigo-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 dark:text-slate-400" href="/profile">
             <UserRound className="h-5 w-5" />
             <span className="font-medium">Profile</span>
           </Link>
           <button
-            className="flex items-center gap-3 px-4 py-3 text-slate-500 transition-all duration-200 hover:text-error"
+            className="flex items-center gap-3 px-4 py-3 text-slate-500 transition-all duration-200 hover:text-error focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             onClick={async () => {
               try {
                 await fetch('/api/auth/supabase-signout', { method: 'POST' });
@@ -133,7 +133,7 @@ export function AppChrome({
         </div>
       </aside>
 
-      <main className="min-h-screen md:ml-64">
+      <main id="main-content" className="min-h-screen md:ml-64">
         <header className="sticky top-0 z-40 flex w-full items-center justify-between bg-slate-50 px-4 py-4 dark:bg-slate-950 md:px-12">
           <div className="flex items-center gap-8">
             <div className="font-headline text-2xl font-extrabold tracking-tight text-primary md:hidden">Campuls</div>
@@ -149,10 +149,16 @@ export function AppChrome({
             </div>
           </div>
 
-          <div className="flex items-center gap-4 md:gap-6">
-            <button className="relative rounded-full p-2 text-slate-600 transition-colors hover:bg-slate-200/50" type="button">
+        <div className="flex items-center gap-4 md:gap-6">
+          <button
+            aria-describedby="notification-status"
+            aria-label="Notifications"
+            className="relative rounded-full p-2 text-slate-600 transition-colors hover:bg-slate-200/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            type="button"
+          >
               <Bell className="h-5 w-5" />
-              <span className="absolute right-2 top-2 h-2 w-2 rounded-full border-2 border-white bg-error" />
+              <span className="absolute right-2 top-2 h-2 w-2 rounded-full border-2 border-white bg-error" aria-hidden="true" />
+              <span className="sr-only" id="notification-status">You have new notifications</span>
             </button>
             <div className="hidden h-10 w-px bg-slate-200 md:block" />
             <div className="flex items-center gap-3">
@@ -188,6 +194,10 @@ export function AppChrome({
           <Zap className="h-5 w-5" />
           <span className="sr-only">Open HOC Console</span>
         </button>
+        <Link className={`flex flex-col items-center gap-1 ${isActive('/assignments') ? 'text-primary' : 'text-slate-400'}`} href="/assignments">
+          <ClipboardList className="h-5 w-5" />
+          <span className="text-[10px] font-medium">Tasks</span>
+        </Link>
         <Link className={`flex flex-col items-center gap-1 ${isActive('/materials') ? 'text-primary' : 'text-slate-400'}`} href="/materials">
           <BookOpenText className="h-5 w-5" />
           <span className="text-[10px] font-medium">Study</span>

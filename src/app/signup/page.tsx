@@ -23,33 +23,39 @@ export default function SignupPage() {
     setError(null);
     setSuccess(null);
 
-    const parsedLevel = Number(level);
+    try {
+      const parsedLevel = Number(level);
 
-    const response = await fetch('/api/auth/signup', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json'
-      },
-      body: JSON.stringify({
-        name,
-        email,
-        password,
-        role,
-        level: Number.isFinite(parsedLevel) ? parsedLevel : null
-      })
-    });
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json'
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          role,
+          level: Number.isFinite(parsedLevel) ? parsedLevel : null
+        })
+      });
 
-    const payload = (await response.json().catch(() => null)) as { error?: string; ok?: boolean } | null;
+      const payload = (await response.json().catch(() => null)) as { error?: string; ok?: boolean } | null;
 
-    setPending(false);
+      if (!response.ok) {
+        setError(payload?.error ?? 'Signup failed. Check the backend configuration and try again.');
+        return;
+      }
 
-    if (!response.ok) {
-      setError(payload?.error ?? 'Signup failed. Check the backend configuration and try again.');
-      return;
+      setSuccess('Account created. You can now sign in.');
+      setTimeout(() => {
+        router.push('/login');
+      }, 1500);
+    } catch (error) {
+      setError(`Signup failed. ${error instanceof Error ? error.message : 'Please try again.'}`);
+    } finally {
+      setPending(false);
     }
-
-    setSuccess('Account created. You can now sign in.');
-    router.push('/login');
   }
 
   return (
@@ -115,6 +121,7 @@ export default function SignupPage() {
                 className='w-full rounded-xl bg-surface-container-highest px-4 py-3 text-sm font-medium outline-none ring-0 transition focus:bg-surface-container-lowest focus:shadow-[0_0_0_2px_rgba(224,224,255,1)]'
                 onChange={(event) => setEmail(event.target.value)}
                 placeholder='alex.rivera@campus.edu'
+                type='email'
                 value={email}
               />
             </label>
