@@ -30,6 +30,7 @@ type AssignmentGroup = {
 };
 
 type MaterialEntry = {
+  id: string;
   title: string;
   course: string;
   label: string;
@@ -123,6 +124,7 @@ const emptySnapshot: DepartmentSnapshot = {
 };
 
 const DAY_ORDER = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as const;
+const DEFAULT_SESSION_MINUTES = 60;
 
 function shortDate(value?: string | null) {
   if (!value) {
@@ -166,7 +168,7 @@ function timeToMinutes(hhmm?: string | null) {
   return h * 60 + m;
 }
 
-function formatRange(start: string, end?: string | null, minutes = 90): string {
+function formatRange(start: string, end?: string | null, minutes = DEFAULT_SESSION_MINUTES): string {
   if (end) {
     return `${to12Hour(start)} — ${to12Hour(end)}`;
   }
@@ -186,13 +188,28 @@ function longDate(value?: string | null) {
   }).format(new Date(value));
 }
 
+function lagosDayStart(value: Date) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Africa/Lagos',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).formatToParts(value);
+  const map = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return Date.UTC(Number(map.year), Number(map.month) - 1, Number(map.day));
+}
+
 function relativeDue(value?: string | null) {
   if (!value) {
     return 'No deadline';
   }
 
   const target = new Date(value);
-  const diffDays = Math.ceil((target.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+  if (Number.isNaN(target.getTime())) {
+    return shortDate(value);
+  }
+
+  const diffDays = Math.ceil((lagosDayStart(target) - lagosDayStart(new Date())) / (1000 * 60 * 60 * 24));
 
   if (Number.isNaN(diffDays)) {
     return shortDate(value);
@@ -241,21 +258,30 @@ export async function getDepartmentSnapshot(accessToken?: string): Promise<Depar
   try {
     const supabase = await createClient(accessToken);
 
-    // Determine today's weekday — both full (Monday) and abbreviated (Mon)
+    // Determine today's weekday and Lagos date.
     const todayWeekday = new Intl.DateTimeFormat('en-US', {
       weekday: 'long',
       timeZone: 'Africa/Lagos'
     }).format(new Date());
-    const todayWeekdayShort = new Intl.DateTimeFormat('en-US', {
-      weekday: 'short',
-      timeZone: 'Africa/Lagos'
-    }).format(new Date());
+    const todayDateParts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Africa/Lagos',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).formatToParts(new Date());
+    const todayDateMap = Object.fromEntries(todayDateParts.map((part) => [part.type, part.value]));
+    const todayDate = `${todayDateMap.year}-${todayDateMap.month}-${todayDateMap.day}`;
 
-    const [timetableRes, assignmentsRes, updatesRes, notesRes, coursesRes] = await Promise.all([
+    const [timetableRes, sessionsRes, assignmentsRes, updatesRes, notesRes, coursesRes] = await Promise.all([
       supabase
         .from('timetable')
-        .select('id, day, scheduled_time, end_time, lecturer, venue, status, course_id, courses:course_id(code, title)')
+        .select('id, day, scheduled_time, end_time, lecturer, status, course_id, courses:course_id(code, title)')
         .order('scheduled_time'),
+      supabase
+        .from('class_sessions')
+        .select('id, timetable_id, date, status, location, started_at, ended_at, created_at')
+        .eq('date', todayDate)
+        .order('created_at', { ascending: false }),
       supabase
         .from('assignments')
         .select('id, title, description, deadline, course_id, courses:course_id(code, title)')
@@ -271,7 +297,14 @@ export async function getDepartmentSnapshot(accessToken?: string): Promise<Depar
       supabase.from('courses').select('id, code, title').order('code')
     ]);
 
-    if (timetableRes.error || assignmentsRes.error || updatesRes.error || notesRes.error || coursesRes.error) {
+    if (
+      timetableRes.error ||
+      sessionsRes.error ||
+      assignmentsRes.error ||
+      updatesRes.error ||
+      notesRes.error ||
+      coursesRes.error
+    ) {
       return emptySnapshot;
     }
 
@@ -285,11 +318,29 @@ export async function getDepartmentSnapshot(accessToken?: string): Promise<Depar
       ])
     );
 
+    const sessionsByTimetableId = new Map<
+      string,
+      { id: string; location: string | null; status: string | null }
+    >();
+
+    for (const session of sessionsRes.data ?? []) {
+      if (!session.timetable_id || sessionsByTimetableId.has(session.timetable_id)) {
+        continue;
+      }
+
+      sessionsByTimetableId.set(session.timetable_id, {
+        id: session.id,
+        location: session.location ?? null,
+        status: session.status ?? null
+      });
+    }
+
     const timetable = (timetableRes.data ?? [])
       .map((row) => {
       const course = (row as { courses?: { code?: string; title?: string } }).courses;
       const timeRaw = row.scheduled_time?.slice(0, 5) ?? '09:00'; // 24h for math
       const endTime = row.end_time?.slice(0, 5) ?? null;
+      const sessionLocation = sessionsByTimetableId.get(row.id)?.location?.trim() || null;
       return {
         id: row.id,
         courseId: row.course_id ?? null,
@@ -300,7 +351,7 @@ export async function getDepartmentSnapshot(accessToken?: string): Promise<Depar
         code: course?.code ?? coursesById.get(row.course_id)?.code ?? 'COURSE',
         title: course?.title ?? coursesById.get(row.course_id)?.title ?? 'Untitled course',
         lecturer: row.lecturer ?? 'TBA',
-        venue: row.venue ?? 'TBA',
+        venue: sessionLocation ?? 'Not confirmed',
         status: String(row.status ?? 'scheduled').toUpperCase(),
         endTime
       };
@@ -314,10 +365,14 @@ export async function getDepartmentSnapshot(accessToken?: string): Promise<Depar
       });
 
     // Compute the current time in Africa/Lagos (minutes since midnight)
-    const nowLagos = new Date(
-      new Date().toLocaleString('en-US', { timeZone: 'Africa/Lagos' })
-    );
-    const nowMinutes = nowLagos.getHours() * 60 + nowLagos.getMinutes();
+    const nowParts = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Africa/Lagos',
+      hour12: false,
+      hour: '2-digit',
+      minute: '2-digit'
+    }).formatToParts(new Date());
+    const nowMap = Object.fromEntries(nowParts.map((part) => [part.type, part.value]));
+    const nowMinutes = Number(nowMap.hour) * 60 + Number(nowMap.minute);
     const todayIndex = dayIndex(todayWeekday);
 
     // Assign date-aware statuses. Only today's rows receive live time-based states.
@@ -342,7 +397,7 @@ export async function getDepartmentSnapshot(accessToken?: string): Promise<Depar
       const [h, m] = row.timeRaw.split(':').map(Number);
       if (Number.isNaN(h) || Number.isNaN(m)) return row;
       const startMinutes = h * 60 + m;
-      const endMinutes = timeToMinutes(row.endTime) ?? startMinutes + 60;
+      const endMinutes = timeToMinutes(row.endTime) ?? startMinutes + DEFAULT_SESSION_MINUTES;
 
       if (nowMinutes >= startMinutes && nowMinutes < endMinutes) {
         return { ...row, status: 'ONGOING' };
@@ -390,7 +445,7 @@ export async function getDepartmentSnapshot(accessToken?: string): Promise<Depar
     const updates = (updatesRes.data ?? []).map((row) => {
       const course = (row as { courses?: { code?: string; title?: string } }).courses;
       const courseCode = course?.code ?? coursesById.get(row.course_id)?.code ?? 'GENERAL';
-      const title = row.content.slice(0, 72);
+      const title = String(row.content ?? '').slice(0, 72);
 
       return {
         id: row.id,
@@ -420,6 +475,7 @@ export async function getDepartmentSnapshot(accessToken?: string): Promise<Depar
       const courseTitle = course?.title ?? coursesById.get(row.course_id)?.title ?? 'Untitled course';
 
       return {
+        id: row.id,
         title: fileNameFromUrl(row.file_url, `Document ${index + 1}`),
         course: `${courseCode} • ${courseTitle}`,
         label: 'Uploaded',
@@ -449,7 +505,7 @@ export async function getDepartmentSnapshot(accessToken?: string): Promise<Depar
           timetableId: activeSessionRow.id,
           code: activeSessionRow.code,
           title: activeSessionRow.title,
-          room: activeSessionRow.venue,
+          room: activeSessionRow.venue ?? 'Not confirmed',
           lecturer: activeSessionRow.lecturer,
           status: activeSessionRow.status,
           time: activeSessionRow.time
@@ -458,7 +514,13 @@ export async function getDepartmentSnapshot(accessToken?: string): Promise<Depar
 
     const hocStats: HocStat[] = [
       { label: 'Ongoing Sessions', value: String(ongoingSessions).padStart(2, '0'), pulse: ongoingSessions > 0 },
-      { label: 'Remaining Today', value: String(Math.max(todaysEntries.length - ongoingSessions, 0)).padStart(2, '0'), pulse: false },
+      {
+        label: 'Remaining Today',
+        value: String(
+          todaysEntries.filter((entry) => entry.status === 'SCHEDULED' || entry.status === 'UP NEXT').length
+        ).padStart(2, '0'),
+        pulse: false
+      },
       { label: 'Pending Updates', value: String(updates.length).padStart(2, '0'), pulse: false }
     ];
 

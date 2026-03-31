@@ -246,8 +246,9 @@ export function TimetableBoard({ rows }: { rows: TimetableRow[] }) {
     }).format(today);
     return normaliseDayKey(dayName);
   });
+  const [weekOffset, setWeekOffset] = useState(0);
 
-  const weekDates = useMemo(() => getWeekDates(), []);
+  const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset]);
 
   const grouped = useMemo(() => {
     const map = new Map<string, TimetableRow[]>();
@@ -298,12 +299,14 @@ export function TimetableBoard({ rows }: { rows: TimetableRow[] }) {
             <div className='flex overflow-hidden rounded-lg border border-outline-variant'>
               <button
                 className='border-r border-outline-variant p-2 transition-colors hover:bg-surface-container-high'
+                onClick={() => setWeekOffset((value) => value - 1)}
                 type='button'
               >
                 <ChevronLeft className='h-4 w-4' />
               </button>
               <button
                 className='p-2 transition-colors hover:bg-surface-container-high'
+                onClick={() => setWeekOffset((value) => value + 1)}
                 type='button'
               >
                 <ChevronRight className='h-4 w-4' />
@@ -344,7 +347,7 @@ export function TimetableBoard({ rows }: { rows: TimetableRow[] }) {
           <div className='group relative col-span-1 overflow-hidden rounded-3xl bg-primary-container p-8 md:col-span-2'>
             <div className='relative z-10'>
               <h3 className='font-headline text-xl font-bold text-white'>
-                Week {Math.max(Math.ceil((weekDates[0]?.date.getDate() ?? 0) / 7), 1)} Progress
+                Week of Month Progress
               </h3>
               <p className='mt-2 max-w-md text-sm text-on-primary-container'>
                 {completed} of {totalRows} sessions completed in the current timetable set.

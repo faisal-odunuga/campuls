@@ -171,7 +171,9 @@ export function UpdatesBoard({ updates }: UpdatesBoardProps) {
           </div>
           <button
             aria-label="Direct message HOC"
-            className="mt-4 inline-flex items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-sm font-bold transition-all hover:bg-white/20"
+            className="mt-4 inline-flex items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-sm font-bold transition-all hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-60"
+            disabled
+            title="Direct message action coming soon"
             type="button"
           >
             Direct Message
@@ -186,8 +188,8 @@ export function UpdatesBoard({ updates }: UpdatesBoardProps) {
             <div className="space-y-4 bg-surface-container-low p-6">
               <h3 className="text-xs font-black uppercase tracking-widest text-on-surface-variant">Categories</h3>
               <ul className="space-y-2">
-                {counts.map((category, index) => {
-                  const active = index === 0;
+                {counts.map((category) => {
+                  const active = selectedCategory === category.key;
                   return (
                     <li key={category.key}>
                       <button
@@ -197,6 +199,7 @@ export function UpdatesBoard({ updates }: UpdatesBoardProps) {
                             ? 'bg-surface-container-lowest text-primary shadow-sm'
                             : 'hover:bg-surface-container-highest text-on-surface-variant'
                         ].join(' ')}
+                        onClick={() => setSelectedCategory(category.key)}
                         type="button"
                       >
                         <span className="font-medium">{category.label}</span>
@@ -219,7 +222,9 @@ export function UpdatesBoard({ updates }: UpdatesBoardProps) {
                 <p className="text-xs opacity-70">Department updates and notices</p>
                 <button
                   aria-label="Direct message HOC"
-                  className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg border border-white/20 bg-white/10 py-2 text-sm font-bold transition-all hover:bg-white/20"
+                  className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg border border-white/20 bg-white/10 py-2 text-sm font-bold transition-all hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled
+                  title="Direct message action coming soon"
                   type="button"
                 >
                   Direct Message
@@ -250,10 +255,10 @@ export function UpdatesBoard({ updates }: UpdatesBoardProps) {
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button aria-label="Bookmark update" className="rounded-full p-2 text-on-surface-variant transition-colors hover:bg-surface-container" type="button">
+                  <button aria-label="Bookmark update" className="rounded-full p-2 text-on-surface-variant transition-colors hover:bg-surface-container disabled:cursor-not-allowed disabled:opacity-60" disabled title="Bookmark action coming soon" type="button">
                     <Bookmark className="h-4 w-4" />
                   </button>
-                  <button aria-label="Share update" className="rounded-full p-2 text-on-surface-variant transition-colors hover:bg-surface-container" type="button">
+                  <button aria-label="Share update" className="rounded-full p-2 text-on-surface-variant transition-colors hover:bg-surface-container disabled:cursor-not-allowed disabled:opacity-60" disabled title="Share action coming soon" type="button">
                     <Share2 className="h-4 w-4" />
                   </button>
                 </div>
@@ -270,7 +275,9 @@ export function UpdatesBoard({ updates }: UpdatesBoardProps) {
                 <span className="text-xs font-bold uppercase text-on-surface-variant">Department Notice</span>
                 <button
                   aria-label="Acknowledge notice"
-                  className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-secondary"
+                  className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-secondary disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled
+                  title="Acknowledgement action coming soon"
                   type="button"
                 >
                   <CheckCircle2 className="h-4 w-4" />

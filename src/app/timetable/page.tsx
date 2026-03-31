@@ -11,7 +11,7 @@ export default async function TimetablePage() {
   }
 
   const snapshot = await getDepartmentSnapshot(session.supabaseAccessToken);
-
+  console.log(snapshot);
   return (
     <AppChrome
       avatarUrl={session.user.image ?? undefined}

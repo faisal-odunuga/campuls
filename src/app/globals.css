@@ -31,6 +31,11 @@ body {
   box-sizing: border-box;
 }
 
+:focus-visible {
+  outline: 2px solid #4c56af;
+  outline-offset: 2px;
+}
+
 ::selection {
   background: #4c56af;
   color: #ffffff;

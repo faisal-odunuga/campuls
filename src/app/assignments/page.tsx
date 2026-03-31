@@ -4,15 +4,32 @@ import { getDepartmentSnapshot } from '@/lib/supabase/queries';
 import { Clock3, Search, SlidersHorizontal, UploadCloud } from 'lucide-react';
 import { redirect } from 'next/navigation';
 
-export default async function AssignmentsPage() {
+export default async function AssignmentsPage({
+  searchParams
+}: {
+  searchParams?: { q?: string | string[] };
+}) {
   const session = await auth();
   if (!session) {
     redirect('/login');
   }
 
   const snapshot = await getDepartmentSnapshot(session.supabaseAccessToken);
-  const totalPending = snapshot.assignments.reduce((total, group) => total + group.items.length, 0);
-  const query = '';
+  const query = typeof searchParams?.q === 'string' ? searchParams.q.trim().toLowerCase() : '';
+  const filteredAssignments = query
+    ? snapshot.assignments
+        .map((group) => ({
+          ...group,
+          items: group.items.filter(
+            (item) =>
+              group.course.toLowerCase().includes(query) ||
+              item.title.toLowerCase().includes(query) ||
+              item.detail.toLowerCase().includes(query)
+          )
+        }))
+        .filter((group) => group.items.length > 0)
+    : snapshot.assignments;
+  const totalPending = filteredAssignments.reduce((total, group) => total + group.items.length, 0);
 
   return (
     <AppChrome
@@ -55,8 +72,8 @@ export default async function AssignmentsPage() {
 
         {/* Assignments Groups */}
         <div className="space-y-10">
-          {snapshot.assignments.length ? (
-            snapshot.assignments.map((group) => (
+          {filteredAssignments.length ? (
+            filteredAssignments.map((group) => (
               <section key={group.course} className="space-y-4">
                 <div className="flex items-end justify-between border-b border-surface-container-highest px-1 pb-2">
                   <h3 className="font-headline text-lg font-bold text-primary">{group.course}</h3>
@@ -121,7 +138,7 @@ export default async function AssignmentsPage() {
             ))
           ) : (
              <div className="rounded-xl border border-surface-container-highest bg-surface-container-lowest p-6 text-sm text-on-surface-variant shadow-sm">
-                No assignments pending! You're all caught up.
+                No assignments pending! You&apos;re all caught up.
              </div>
           )}
         </div>

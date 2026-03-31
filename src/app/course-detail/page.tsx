@@ -74,7 +74,7 @@ export default async function CourseDetailPage() {
 
         <section className="mt-8 px-6">
           <div className="mb-6 flex items-end justify-between">
-            <h2 className="font-headline text-xl font-bold text-primary">Today's Schedule</h2>
+            <h2 className="font-headline text-xl font-bold text-primary">Today&apos;s Schedule</h2>
             <span className="text-xs font-semibold text-on-surface-variant">Live Sync</span>
           </div>
 

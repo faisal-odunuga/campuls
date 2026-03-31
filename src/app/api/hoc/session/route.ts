@@ -89,7 +89,10 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: sessionError.message }, { status: 500 });
       }
 
-      return NextResponse.json({ ok: true });
+      return NextResponse.json({
+        ok: true,
+        message: 'Class session created. Location not confirmed yet.'
+      });
     }
 
     if (action === 'postpone-session') {

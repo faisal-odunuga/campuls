@@ -139,7 +139,9 @@ export function HocConsole({ snapshot }: HocConsoleProps) {
         body: JSON.stringify(body)
       });
 
-      const payload = (await response.json().catch(() => null)) as { error?: string; ok?: boolean } | null;
+      const payload = (await response.json().catch(() => null)) as
+        | { error?: string; ok?: boolean; message?: string }
+        | null;
 
       if (!response.ok) {
         setMessage(payload?.error ?? 'Action failed.');
@@ -155,7 +157,7 @@ export function HocConsole({ snapshot }: HocConsoleProps) {
         setNoticeCategory('announcement');
         setNoticeCourseId('');
       }
-      setMessage(successMessage);
+      setMessage(payload?.message ?? successMessage);
     } catch {
       setMessage('Network error. Please try again.');
     } finally {

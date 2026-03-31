@@ -38,8 +38,10 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          const copy = response.clone();
-          caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, copy));
+          if (response.ok) {
+            const copy = response.clone();
+            caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, copy));
+          }
           return response;
         })
         .catch(async () => {
@@ -66,11 +68,17 @@ self.addEventListener('fetch', (event) => {
       }
       try {
         const response = await fetch(request);
-        const copy = response.clone();
-        caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, copy));
+        if (response.ok) {
+          const copy = response.clone();
+          caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, copy));
+        }
         return response;
       } catch {
-        return caches.match('/offline');
+        if (request.mode === 'navigate' || request.destination === 'document') {
+          return caches.match('/offline');
+        }
+
+        return Response.error();
       }
     })
   );

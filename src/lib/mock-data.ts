@@ -109,7 +109,7 @@ export const assignmentGroups = [
 export const materials = [
   {
     title: 'Lecture 12: Neural Nets',
-    course: 'CSC301 • Dr. Sarah Jenkins',
+    course: 'CSC301 • Prof. Sarah Jenkins',
     label: 'New',
     size: '4.2 MB',
     time: 'Added 2h ago'
@@ -176,7 +176,7 @@ export const hocActiveSession = {
   code: 'CSC301',
   title: 'Advanced Algorithms',
   room: 'Hall 4B',
-  lecturer: 'Dr. Sarah Jenkins',
+  lecturer: 'Prof. Sarah Jenkins',
   status: 'Live Now'
 };
 

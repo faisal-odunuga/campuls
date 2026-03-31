@@ -91,7 +91,7 @@ export default async function DashboardPage() {
             <section>
               <div className="mb-6 flex items-end justify-between">
                 <div>
-                  <h3 className="font-headline text-2xl font-extrabold tracking-tight text-primary">Today's Schedule</h3>
+                  <h3 className="font-headline text-2xl font-extrabold tracking-tight text-primary">Today&apos;s Schedule</h3>
                   <p className="font-medium text-sm text-outline">{todayLabel}</p>
                 </div>
               <Link href="/timetable" className="flex items-center gap-1 text-sm font-bold text-primary hover:underline">
