@@ -1,0 +1,228 @@
+
+
+# 🧩 **CampusOS – Department Edition (Final Technical Prompt)**
+
+**Project Goal:**
+Build a **mobile-first Progressive Web App (PWA)** for a single university department. It will provide:
+
+* Real-time timetable with dynamic updates
+* Class start notifications
+* Assignment tracker
+* Notes repository with offline access
+* Role-based system: `student` and `hoc`
+* Offline-first using Service Workers and IndexedDB
+
+**Tech Stack Constraints:**
+
+* **Frontend:** Next.js (App Router), Tailwind CSS
+* **Backend/Database:** Supabase PostgreSQL + Realtime
+* **Offline:** Service Workers + IndexedDB (`idb`)
+* **File Storage:** Supabase Storage OR external cloud storage (Cloudinary/S3)
+* **Auth:** NextAuth.js (JWT stored in IndexedDB for offline)
+* **Deployment:** Frontend on Vercel, Backend on Supabase
+
+---
+
+## Step 1: **Database Schema**
+
+### 1. **users**
+
+```sql id="users_table"
+id: uuid PRIMARY KEY
+name: string
+email: string UNIQUE
+role: enum('student','hoc')
+level: integer  -- optional, e.g., 100, 200, 300, 400
+created_at: timestamp
+```
+
+### 2. **courses**
+
+```sql id="courses_table"
+id: uuid PRIMARY KEY
+code: string   -- e.g., CSC301
+title: string
+created_at: timestamp
+```
+
+### 3. **timetable**
+
+```sql id="timetable_table"
+id: uuid PRIMARY KEY
+course_id: uuid REFERENCES courses(id)
+day: enum('Monday','Tuesday','Wednesday','Thursday','Friday','Saturday')
+scheduled_time: time
+lecturer: string
+venue: string
+status: enum('scheduled','ongoing','cancelled','postponed')
+created_at: timestamp
+```
+
+### 4. **class_sessions** (for realtime “class started” signal)
+
+```sql id="class_sessions_table"
+id: uuid PRIMARY KEY
+timetable_id: uuid REFERENCES timetable(id)
+started_at: timestamp
+started_by: uuid REFERENCES users(id)
+```
+
+### 5. **assignments**
+
+```sql id="assignments_table"
+id: uuid PRIMARY KEY
+course_id: uuid REFERENCES courses(id)
+title: string
+description: text
+deadline: timestamp
+created_by: uuid REFERENCES users(id)
+created_at: timestamp
+```
+
+### 6. **notes**
+
+```sql id="notes_table"
+id: uuid PRIMARY KEY
+course_id: uuid REFERENCES courses(id)
+file_url: string
+uploaded_by: uuid REFERENCES users(id)
+created_at: timestamp
+```
+
+### 7. **updates_board**
+
+```sql id="updates_board_table"
+id: uuid PRIMARY KEY
+course_id: uuid REFERENCES courses(id)
+content: text
+created_by: uuid REFERENCES users(id)
+created_at: timestamp
+```
+
+---
+
+## Step 2: **Authentication**
+
+* Use **NextAuth.js**
+* Roles: `student`, `hoc`
+* Email/password or magic link
+* Store JWT in **IndexedDB** for offline session persistence
+
+---
+
+## Step 3: **Frontend Requirements**
+
+* Next.js PWA, installable option
+* Tailwind CSS
+* Zustand or React Context for state
+* Pages/Components:
+
+1. **Login / Signup**
+2. **Student Dashboard**
+
+   * Daily timetable
+   * Notifications
+   * Assignments list
+   * Notes list
+3. **HOC Dashboard**
+
+   * Manage timetable (update lecturer, venue, status)
+   * Trigger “class started” signal
+   * Post updates to updates board
+   * Manage assignments and notes
+4. **Offline Storage**
+
+   * Cache timetable and notes metadata in IndexedDB
+   * Store downloaded PDFs locally
+
+---
+
+## Step 4: **Realtime Functionality**
+
+* Use **Supabase Realtime**
+* Listen to:
+
+  * `class_sessions` → show “class started” notification
+  * `timetable` → notify students on updates
+* Frontend updates instantly without refresh
+
+---
+
+## Step 5: **Offline Functionality**
+
+* **Service Workers**:
+
+  * Cache API calls (timetable, assignments, notes metadata)
+  * Cache app shell (HTML/CSS/JS)
+* **IndexedDB**:
+
+  * Store timetable JSON, assignments, notes metadata, JWT token
+  * Sync with backend when online
+
+---
+
+## Step 6: **File Storage**
+
+* Use **external storage** if Supabase 50MB limit is insufficient
+* Supabase stores **metadata only**
+* IndexedDB caches downloaded files for offline access
+
+---
+
+## Step 7: **Notifications**
+
+* In-app notifications:
+
+  * Class started
+  * Class postponed/cancelled
+  * Venue/lecturer updated
+  * New assignment posted
+* Optional push notifications (Firebase Cloud Messaging)
+
+---
+
+## Step 8: **Roles & Permissions**
+
+| Role    | Actions                                                                                 |
+| ------- | --------------------------------------------------------------------------------------- |
+| Student | View timetable, assignments, notes, updates; receive notifications                      |
+| HOC     | Edit timetable, trigger “class started”, post updates, manage assignments/notes/courses |
+
+---
+
+## Step 9: **Deployment**
+
+* Frontend → **Vercel**
+* Backend → **Supabase**
+* Storage → **Cloudinary / S3**
+
+---
+
+## Step 10: **AI Agent Step-by-Step Tasks**
+
+1. Create all database tables with schema above
+2. Set up Supabase project (Auth + Realtime + Storage)
+3. Initialize Next.js project with Tailwind CSS and PWA support
+4. Implement NextAuth.js auth with JWT offline caching
+5. Build frontend pages:
+
+   * Student dashboard
+   * HOC dashboard
+   * Offline notes viewer
+6. Integrate Supabase Realtime:
+
+   * Listen to `class_sessions` and `timetable` changes
+   * Update UI instantly
+7. Implement offline caching:
+
+   * Service Workers for API and app shell
+   * IndexedDB for timetable, assignments, notes, JWT
+8. Integrate external cloud storage for notes PDFs
+9. Implement notifications system (in-app + optional push)
+10. Deploy frontend on Vercel, backend on Supabase
+11. Test offline/online scenarios thoroughly
+
+---
+
+✅ This prompt is **ready for an AI agent** to generate the full app including **database, frontend, backend, offline-first, realtime notifications, and deployment**.
+
