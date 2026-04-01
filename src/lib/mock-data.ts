@@ -31,7 +31,7 @@ export const timetableRows = [
     title: 'Advanced Algorithms',
     lecturer: 'Prof. Sarah Jenkins',
     venue: 'Lecture Theatre 4 • Main Wing',
-    status: 'ONGOING'
+    status: 'ongoing'
   },
   {
     time: '11:00',
@@ -40,7 +40,7 @@ export const timetableRows = [
     title: 'Database Systems',
     lecturer: 'Dr. Emeka Okafor',
     venue: 'Room 302 • Tech Hub',
-    status: 'SCHEDULED'
+    status: 'scheduled'
   },
   {
     time: '14:00',
@@ -49,7 +49,7 @@ export const timetableRows = [
     title: 'Software Engineering',
     lecturer: 'Prof. Laila Hassan',
     venue: 'Innovation Lab',
-    status: 'CANCELLED'
+    status: 'cancelled'
   }
 ];
 
@@ -177,7 +177,7 @@ export const hocActiveSession = {
   title: 'Advanced Algorithms',
   room: 'Hall 4B',
   lecturer: 'Prof. Sarah Jenkins',
-  status: 'Live Now'
+  status: 'ongoing'
 };
 
 export const profileFields = [

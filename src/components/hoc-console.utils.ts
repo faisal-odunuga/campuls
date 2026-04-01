@@ -1,4 +1,5 @@
 import type { HocSnapshot } from '@/lib/supabase/queries';
+import { getSessionStatusLabel, getSessionStatusTone, normalizeSessionStatus } from '@/lib/session-status';
 
 export type SessionRow = HocSnapshot['timetable'][number];
 
@@ -18,23 +19,21 @@ export const noticeCategories: NoticeCategoryOption[] = [
 ];
 
 export function getStatusLabel(row: SessionRow) {
-  if (row.status === 'ONGOING') return 'Live Now';
-  if (row.status === 'UP NEXT' || row.status === 'SCHEDULED') return 'Upcoming';
-  if (row.status === 'POSTPONED') return 'Postponed';
-  if (row.status === 'CANCELLED') return 'Cancelled';
-  return 'Completed';
+  return getSessionStatusLabel(row.status);
 }
 
 export function getCardStyles(row: SessionRow) {
-  if (row.status === 'ONGOING') {
+  const status = normalizeSessionStatus(row.status);
+
+  if (status === 'ongoing') {
     return 'bg-surface-container-lowest p-6 ring-2 ring-secondary/20 shadow-xl shadow-secondary/5';
   }
 
-  if (row.status === 'POSTPONED') {
+  if (status === 'postponed') {
     return 'bg-surface-container p-6 opacity-90 border border-tertiary-fixed/25';
   }
 
-  if (row.status === 'CANCELLED') {
+  if (status === 'cancelled') {
     return 'bg-error-container/15 p-6 border border-error-container/20 opacity-70';
   }
 
@@ -42,9 +41,11 @@ export function getCardStyles(row: SessionRow) {
 }
 
 export function getIconTone(row: SessionRow) {
-  if (row.status === 'ONGOING') return 'bg-secondary-fixed text-on-secondary-fixed';
-  if (row.status === 'POSTPONED') return 'bg-tertiary-fixed text-on-tertiary-fixed';
-  if (row.status === 'CANCELLED') return 'bg-error-container text-on-error-container';
+  const tone = getSessionStatusTone(row.status);
+
+  if (tone === 'success') return 'bg-secondary-fixed text-on-secondary-fixed';
+  if (tone === 'warning') return 'bg-tertiary-fixed text-on-tertiary-fixed';
+  if (tone === 'error') return 'bg-error-container text-on-error-container';
   return 'bg-primary-fixed text-primary';
 }
 

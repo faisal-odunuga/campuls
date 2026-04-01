@@ -16,6 +16,7 @@ import {
   TriangleAlert
 } from 'lucide-react';
 import type { HocSnapshot } from '@/lib/supabase/queries';
+import { formatLagosDateLabel } from '@/lib/date';
 import {
   formatNoticeCategory,
   getCardStyles,
@@ -61,24 +62,15 @@ export function HocConsole({ snapshot }: HocConsoleProps) {
   const ongoingCount = snapshot.hocStats.find((stat) => stat.label === 'Ongoing Sessions')?.value ?? '00';
   const remainingCount = snapshot.hocStats.find((stat) => stat.label === 'Remaining Today')?.value ?? '00';
   const alertsCount = String(
-    todayRows.filter((row) => row.status === 'CANCELLED' || row.status === 'POSTPONED').length
+    todayRows.filter((row) => row.status === 'cancelled' || row.status === 'postponed').length
   ).padStart(2, '0');
   const featuredRow =
-    todayRows.find((row) => row.status === 'ONGOING') ??
-    todayRows.find((row) => row.status === 'UP NEXT' || row.status === 'SCHEDULED') ??
+    todayRows.find((row) => row.status === 'ongoing') ??
+    todayRows.find((row) => row.status === 'pending' || row.status === 'scheduled') ??
     todayRows[0];
 
   useEffect(() => {
-    setTodayLabel(
-      new Intl.DateTimeFormat('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-        timeZone: 'Africa/Lagos'
-      })
-        .format(new Date())
-        .toUpperCase()
-    );
+    setTodayLabel(formatLagosDateLabel(new Date()).toUpperCase());
   }, []);
 
   async function runAction(body: Record<string, string | undefined>, actionId: string, successMessage: string) {
@@ -202,10 +194,10 @@ export function HocConsole({ snapshot }: HocConsoleProps) {
           <div className="space-y-4">
             {todayRows.length > 0 ? (
               todayRows.map((row) => {
-                const isOngoing = row.status === 'ONGOING';
+                const isOngoing = row.status === 'ongoing';
                 const isStarted = isOngoing;
-                const canStart = row.status === 'UP NEXT' || row.status === 'SCHEDULED';
-                const canReschedule = row.status === 'POSTPONED' || row.status === 'CANCELLED';
+                const canStart = row.status === 'pending' || row.status === 'scheduled';
+                const canReschedule = row.status === 'postponed' || row.status === 'cancelled';
 
                 return (
                   <div key={row.id} className={`${getCardStyles(row)} rounded-xl relative overflow-hidden`}>

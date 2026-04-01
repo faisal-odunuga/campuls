@@ -1,4 +1,6 @@
 import { createClient, supabaseConfigured } from '@/lib/supabase/server';
+import { getLagosDayStart, getLagosTimeParts } from '@/lib/date';
+import { normalizeSessionStatus } from '@/lib/session-status';
 import type { CourseRelation, CoursesById } from './types';
 
 const DAY_ORDER = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as const;
@@ -66,17 +68,6 @@ export function longDate(value?: string | null) {
   }).format(new Date(value));
 }
 
-export function lagosDayStart(value: Date) {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'Africa/Lagos',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).formatToParts(value);
-  const map = Object.fromEntries(parts.map((part) => [part.type, part.value]));
-  return Date.UTC(Number(map.year), Number(map.month) - 1, Number(map.day));
-}
-
 export function relativeDue(value?: string | null) {
   if (!value) {
     return 'No deadline';
@@ -87,7 +78,7 @@ export function relativeDue(value?: string | null) {
     return shortDate(value);
   }
 
-  const diffDays = Math.ceil((lagosDayStart(target) - lagosDayStart(new Date())) / (1000 * 60 * 60 * 24));
+  const diffDays = Math.ceil((getLagosDayStart(target) - getLagosDayStart(new Date())) / (1000 * 60 * 60 * 24));
 
   if (Number.isNaN(diffDays)) {
     return shortDate(value);
@@ -132,6 +123,23 @@ export function pickCourse(course: CourseRelation) {
   return Array.isArray(course) ? course[0] ?? null : course ?? null;
 }
 
+export function isPastLagosTime(timeString?: string | null) {
+  if (!timeString) {
+    return false;
+  }
+
+  const [hours, minutes] = timeString.split(':').map(Number);
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+    return false;
+  }
+
+  const nowMap = getLagosTimeParts();
+  const currentTotalMinutes = Number(nowMap.hour) * 60 + Number(nowMap.minute);
+  const targetTotalMinutes = hours * 60 + minutes;
+
+  return currentTotalMinutes >= targetTotalMinutes;
+}
+
 export async function createDepartmentContext(accessToken?: string) {
   if (!supabaseConfigured()) {
     return null;
@@ -152,8 +160,8 @@ export function buildTimetableEntries(
     day: string;
     scheduled_time: string | null;
     end_time: string | null;
-    lecturer?: string | null;
     status?: string | null;
+    lecturer?: string | null;
     course_id: string | null;
     courses?: CourseRelation;
   }>,
@@ -163,13 +171,22 @@ export function buildTimetableEntries(
     location: string | null;
     status: string | null;
     lecturer: string | null;
+    scheduled_time: string | null;
+    end_time: string | null;
   }>,
   coursesById: CoursesById,
   todayWeekday: string,
 ) {
   const sessionsByTimetableId = new Map<
     string,
-    { id: string; location: string | null; status: string | null; lecturer: string | null }
+    {
+      id: string;
+      location: string | null;
+      status: string | null;
+      lecturer: string | null;
+      scheduled_time: string | null;
+      end_time: string | null;
+    }
   >();
 
   for (const session of sessionsRows) {
@@ -182,16 +199,22 @@ export function buildTimetableEntries(
       location: session.location ?? null,
       status: session.status ?? null,
       lecturer: session.lecturer ?? null,
+      scheduled_time: session.scheduled_time ?? null,
+      end_time: session.end_time ?? null,
     });
   }
 
   const timetable = timetableRows
     .map((row) => {
       const course = pickCourse(row.courses);
-      const timeRaw = row.scheduled_time?.slice(0, 5) ?? '09:00';
-      const endTime = row.end_time?.slice(0, 5) ?? null;
       const session = sessionsByTimetableId.get(row.id);
+      const timeRaw = (session?.scheduled_time ?? row.scheduled_time)?.slice(0, 5) ?? '09:00';
+      const endTime = (session?.end_time ?? row.end_time)?.slice(0, 5) ?? null;
       const sessionLocation = session?.location?.trim() || null;
+      const baseStatus = normalizeSessionStatus(session?.status ?? row.status ?? 'scheduled');
+      const computedStatus = dayIndex(row.day) === dayIndex(todayWeekday) && baseStatus === 'scheduled' && isPastLagosTime(timeRaw)
+        ? 'pending'
+        : baseStatus;
       return {
         id: row.id,
         courseId: row.course_id ?? null,
@@ -203,8 +226,9 @@ export function buildTimetableEntries(
         title: course?.title ?? coursesById.get(row.course_id ?? '')?.title ?? 'Untitled course',
         lecturer: session?.lecturer ?? row.lecturer ?? 'TBA',
         venue: sessionLocation ?? 'Not confirmed',
-        status: String(row.status ?? 'scheduled').toUpperCase(),
+        status: computedStatus,
         endTime,
+        isRescheduled: Boolean(session?.scheduled_time && row.scheduled_time && session.scheduled_time !== row.scheduled_time),
       };
     })
     .sort((a, b) => {
@@ -215,58 +239,11 @@ export function buildTimetableEntries(
       return a.timeRaw.localeCompare(b.timeRaw);
     });
 
-  const nowParts = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'Africa/Lagos',
-    hour12: false,
-    hour: '2-digit',
-    minute: '2-digit',
-  }).formatToParts(new Date());
-  const nowMap = Object.fromEntries(nowParts.map((part) => [part.type, part.value]));
-  const nowMinutes = Number(nowMap.hour) * 60 + Number(nowMap.minute);
   const todayIndex = dayIndex(todayWeekday);
-
-  let upNextMarked = false;
-  const timetableWithStatus = timetable.map((row) => {
-    const immutable = row.status === 'CANCELLED' || row.status === 'POSTPONED';
-    if (immutable) return row;
-
-    const rowIndex = dayIndex(row.day);
-    if (rowIndex < 0) {
-      return row;
-    }
-
-    if (rowIndex < todayIndex) {
-      return { ...row, status: 'COMPLETED' };
-    }
-
-    if (rowIndex > todayIndex) {
-      return { ...row, status: 'SCHEDULED' };
-    }
-
-    const [h, m] = row.timeRaw.split(':').map(Number);
-    if (Number.isNaN(h) || Number.isNaN(m)) return row;
-    const startMinutes = h * 60 + m;
-    const endMinutes = timeToMinutes(row.endTime) ?? startMinutes + DEFAULT_SESSION_MINUTES;
-
-    if (nowMinutes >= startMinutes && nowMinutes < endMinutes) {
-      return { ...row, status: 'ONGOING' };
-    }
-    if (nowMinutes >= endMinutes) {
-      return { ...row, status: 'COMPLETED' };
-    }
-    if (!upNextMarked) {
-      upNextMarked = true;
-      return { ...row, status: 'UP NEXT' };
-    }
-    return { ...row, status: 'SCHEDULED' };
-  });
-
-  const todaysEntries = timetableWithStatus.filter((row) => dayIndex(row.day) === todayIndex);
-  const ongoingSessions = todaysEntries.filter((row) => row.status === 'ONGOING').length;
+  const todaysEntries = timetable.filter((row) => dayIndex(row.day) === todayIndex);
+  const ongoingSessions = todaysEntries.filter((row) => row.status === 'ongoing').length;
   const activeSessionRow =
-    todaysEntries.find((row) => row.status === 'ONGOING') ??
-    todaysEntries.find((row) => row.status === 'UP NEXT') ??
-    null;
+    todaysEntries.find((row) => row.status === 'ongoing') ?? null;
 
   const activeSession = activeSessionRow
     ? {
@@ -285,12 +262,12 @@ export function buildTimetableEntries(
     {
       label: 'Remaining Today',
       value: String(
-        todaysEntries.filter((entry) => entry.status === 'SCHEDULED' || entry.status === 'UP NEXT').length,
+        todaysEntries.filter((entry) => entry.status === 'scheduled' || entry.status === 'pending').length,
       ).padStart(2, '0'),
       pulse: false,
     },
     { label: 'Pending Updates', value: '00', pulse: false },
   ];
 
-  return { timetable, fullTimetable: timetableWithStatus, todaysEntries, activeSession, hocStats };
+  return { timetable, fullTimetable: timetable, todaysEntries, activeSession, hocStats };
 }

@@ -1,5 +1,6 @@
 import { auth } from '@/auth';
 import { createAdminClient } from '@/lib/supabase/server';
+import { getLagosDateIso } from '@/lib/date';
 import { getUserProfile } from '@/lib/supabase/queries';
 import { NextResponse } from 'next/server';
 
@@ -65,10 +66,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'timetableId is required' }, { status: 400 });
     }
 
+    const todayDate = getLagosDateIso();
     const { data: row, error: rowError } = await supabase
-      .from('timetable')
-      .select('id, status, scheduled_time, day')
-      .eq('id', body.timetableId)
+      .from('class_sessions')
+      .select('id, timetable_id, date, status, scheduled_time, end_time')
+      .eq('timetable_id', body.timetableId)
+      .eq('date', todayDate)
       .maybeSingle();
 
     if (rowError) {
@@ -81,7 +84,7 @@ export async function POST(request: Request) {
 
     if (action === 'start-session') {
       const { error: sessionError } = await supabase.rpc('start_class_session', {
-        p_timetable_id: row.id,
+        p_timetable_id: row.timetable_id,
         p_started_by: profile?.id ?? null
       });
 
@@ -97,7 +100,7 @@ export async function POST(request: Request) {
 
     if (action === 'postpone-session') {
       const { error: updateError } = await supabase
-        .from('timetable')
+        .from('class_sessions')
         .update({ status: 'postponed' })
         .eq('id', row.id);
 
@@ -110,7 +113,7 @@ export async function POST(request: Request) {
 
     if (action === 'reschedule-session') {
       const { error: updateError } = await supabase
-        .from('timetable')
+        .from('class_sessions')
         .update({ status: 'scheduled' })
         .eq('id', row.id);
 

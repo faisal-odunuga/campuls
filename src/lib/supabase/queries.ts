@@ -7,6 +7,7 @@ import {
   relativeDue,
   shortDate,
 } from './utils';
+import { formatLagosWeekday, getLagosDateIso } from '@/lib/date';
 import type {
   AssignmentsSnapshotData,
   DepartmentSnapshot,
@@ -45,18 +46,8 @@ async function buildTimetableSnapshot(accessToken?: string): Promise<TimetableSn
   if (!context) return null;
 
   const { supabase, coursesById } = context;
-  const todayWeekday = new Intl.DateTimeFormat('en-US', {
-    weekday: 'long',
-    timeZone: 'Africa/Lagos',
-  }).format(new Date());
-  const todayDateParts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Africa/Lagos',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).formatToParts(new Date());
-  const todayDateMap = Object.fromEntries(todayDateParts.map((part) => [part.type, part.value]));
-  const todayDate = `${todayDateMap.year}-${todayDateMap.month}-${todayDateMap.day}`;
+  const todayWeekday = formatLagosWeekday();
+  const todayDate = getLagosDateIso();
 
   const [timetableRes, sessionsRes] = await Promise.all([
     supabase
@@ -65,7 +56,7 @@ async function buildTimetableSnapshot(accessToken?: string): Promise<TimetableSn
       .order('scheduled_time'),
     supabase
       .from('class_sessions')
-      .select('id, timetable_id, date, status, location, lecturer, started_at, ended_at, created_at')
+      .select('id, timetable_id, date, status, location, lecturer, scheduled_time, end_time, started_at, ended_at, created_at')
       .eq('date', todayDate)
       .order('created_at', { ascending: false }),
   ]);
@@ -477,3 +468,6 @@ export async function getUserProfile(email?: string, accessToken?: string): Prom
     return null;
   }
 }
+
+
+ 

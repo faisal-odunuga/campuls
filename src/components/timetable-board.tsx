@@ -18,6 +18,8 @@ import {
   TriangleAlert,
 } from 'lucide-react';
 import type { DepartmentSnapshot } from '@/lib/supabase/queries';
+import { formatLagosWeekday, getLagosNow, getLagosWeekDates } from '@/lib/date';
+import { getSessionStatusLabel, normalizeSessionStatus } from '@/lib/session-status';
 
 type TimetableRow = DepartmentSnapshot['fullTimetable'][number];
 
@@ -49,83 +51,17 @@ function normaliseDayKey(day: string) {
   );
 }
 
-function statusTone(status: string) {
-  if (status === 'ONGOING') return 'success';
-  if (status === 'CANCELLED') return 'error';
-  if (status === 'POSTPONED') return 'warning';
-  return 'neutral';
-}
-
-function getLagosNow() {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'Africa/Lagos',
-    hour12: false,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  }).formatToParts(new Date());
-
-  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
-  return new Date(
-    Number(values.year),
-    Number(values.month) - 1,
-    Number(values.day),
-    Number(values.hour),
-    Number(values.minute),
-    Number(values.second),
-  );
-}
-
-function getWeekStart(date: Date) {
-  const copy = new Date(date);
-  const day = copy.getDay() === 0 ? 7 : copy.getDay();
-  copy.setDate(copy.getDate() - day + 1);
-  copy.setHours(0, 0, 0, 0);
-  return copy;
-}
-
-function getWeekDates(weekOffset = 0) {
-  const start = getWeekStart(getLagosNow());
-  start.setDate(start.getDate() + weekOffset * 7);
-  return DAY_ORDER.map((day, index) => {
-    const date = new Date(start);
-    date.setDate(start.getDate() + index);
-    return {
-      day,
-      short: DAY_SHORT[day],
-      date,
-      label: new Intl.DateTimeFormat('en-US', {
-        day: 'numeric',
-        timeZone: 'Africa/Lagos',
-      }).format(date),
-    };
-  });
-}
-
-function formatDateLabel(date: Date) {
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    timeZone: 'Africa/Lagos',
-  }).format(date);
-}
-
 function progressPercent(rows: TimetableRow[]) {
   if (!rows.length) return 0;
-  const completed = rows.filter(
-    (row) => row.status === 'COMPLETED' || row.status === 'CANCELLED',
-  ).length;
+  const completed = rows.filter((row) => normalizeSessionStatus(row.status) === 'completed').length;
   return Math.round((completed / rows.length) * 100);
 }
 
 function Card({ row }: { row: TimetableRow }) {
-  const tone = statusTone(row.status);
-  const isOngoing = row.status === 'ONGOING';
-  const isCancelled = row.status === 'CANCELLED';
-  const isPostponed = row.status === 'POSTPONED';
+  const status = normalizeSessionStatus(row.status);
+  const isOngoing = status === 'ongoing';
+  const isCancelled = status === 'cancelled';
+  const isPostponed = status === 'postponed';
 
   if (isCancelled) {
     return (
@@ -216,7 +152,7 @@ function Card({ row }: { row: TimetableRow }) {
           {row.code}
         </span>
         <span className='rounded-full bg-surface-container-high px-2.5 py-1 text-[10px] font-bold text-on-surface-variant uppercase'>
-          {tone === 'neutral' ? 'Scheduled' : row.status}
+          {getSessionStatusLabel(status)}
         </span>
       </div>
       <h4 className='font-headline text-sm font-bold leading-tight text-on-surface'>
@@ -240,15 +176,12 @@ function Card({ row }: { row: TimetableRow }) {
 export function TimetableBoard({ rows }: { rows: TimetableRow[] }) {
   const [selectedDay, setSelectedDay] = useState<string>(() => {
     const today = getLagosNow();
-    const dayName = new Intl.DateTimeFormat('en-US', {
-      weekday: 'long',
-      timeZone: 'Africa/Lagos',
-    }).format(today);
+    const dayName = formatLagosWeekday(today);
     return normaliseDayKey(dayName);
   });
   const [weekOffset, setWeekOffset] = useState(0);
 
-  const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset]);
+  const weekDates = useMemo(() => getLagosWeekDates(weekOffset), [weekOffset]);
 
   const grouped = useMemo(() => {
     const map = new Map<string, TimetableRow[]>();
@@ -267,10 +200,11 @@ export function TimetableBoard({ rows }: { rows: TimetableRow[] }) {
     return map;
   }, [rows]);
 
-  const orderedDays = weekDates.map(({ day, short, date }) => ({
+  const orderedDays = weekDates.map(({ day, short, date, label }) => ({
     day,
     short,
     date,
+    label,
     rows: grouped.get(day) ?? [],
   }));
 
@@ -278,7 +212,7 @@ export function TimetableBoard({ rows }: { rows: TimetableRow[] }) {
   const totalRows = rows.length;
   const progress = progressPercent(rows);
   const completed = rows.filter(
-    (row) => row.status === 'COMPLETED' || row.status === 'CANCELLED',
+    (row) => normalizeSessionStatus(row.status) === 'completed',
   ).length;
 
   return (
@@ -294,7 +228,7 @@ export function TimetableBoard({ rows }: { rows: TimetableRow[] }) {
           </div> */}
           <div className='flex items-center gap-3'>
             <span className='text-xs font-bold uppercase tracking-widest text-on-surface-variant'>
-              Current Week: {formatDateLabel(weekDates[0]?.date ?? getLagosNow())}
+              Current Week: {weekDates[0]?.label ?? ''}
             </span>
             <div className='flex overflow-hidden rounded-lg border border-outline-variant'>
               <button
@@ -316,12 +250,12 @@ export function TimetableBoard({ rows }: { rows: TimetableRow[] }) {
         </div>
 
         <div className='grid grid-cols-1 gap-6 xl:grid-cols-5'>
-          {orderedDays.map(({ day, date, rows: dayRows }) => (
+          {orderedDays.map(({ day, label, rows: dayRows }) => (
             <div key={day} className='space-y-4'>
               <div className='mb-6'>
                 <h3 className='font-headline text-lg font-bold text-primary'>{day}</h3>
                 <p className='mt-0.5 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60'>
-                  {formatDateLabel(date)}
+                  {label}
                 </p>
               </div>
 

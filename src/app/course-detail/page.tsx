@@ -14,7 +14,7 @@ export default async function CourseDetailPage() {
   const active = snapshot.activeSession;
   const totalSessions = snapshot.timetable.length;
   const attendedCount = snapshot.timetable.filter(
-    (row) => row.status === 'ONGOING' || row.status === 'COMPLETED'
+    (row) => row.status === 'ongoing' || row.status === 'completed'
   ).length;
   const attendancePercent = totalSessions > 0 ? Math.round((attendedCount / totalSessions) * 100) : null;
   const attendanceLabel =

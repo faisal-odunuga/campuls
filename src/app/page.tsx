@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { RealtimeRefresh } from '@/components/realtime-refresh';
 import { getDashboardSnapshot } from '@/lib/supabase/queries';
+import { formatLagosTodayLabel, formatLagosWeekday } from '@/lib/date';
 import {
   ArrowRight,
   CalendarX,
@@ -23,16 +24,9 @@ export default async function DashboardPage() {
   const snapshot = await getDashboardSnapshot(session.supabaseAccessToken);
   const activeSession = snapshot.activeSession;
   // console.log(activeSession)
-  const todayLabel = new Intl.DateTimeFormat('en-US', {
-    weekday: 'long',
-    month: 'short',
-    day: 'numeric',
-    timeZone: 'Africa/Lagos'
-  }).format(new Date());
-  const todayWeekday = new Intl.DateTimeFormat('en-US', {
-    weekday: 'long',
-    timeZone: 'Africa/Lagos'
-  }).format(new Date());
+  const todayLabel = formatLagosTodayLabel();
+  const todayWeekday = formatLagosWeekday();
+  
   // timetable is already filtered to today's day by the DB query
   const todaysSchedule = snapshot.timetable;
 
@@ -98,9 +92,11 @@ export default async function DashboardPage() {
               </div>
               <div className="space-y-4">
                 {todaysSchedule.length > 0 ? todaysSchedule.map((row) => {
-                  const isOngoing = row.status === 'ONGOING';
-                  const isCancelled = row.status === 'CANCELLED';
-                  const isScheduled = row.status === 'SCHEDULED' || row.status === 'UP NEXT';
+                  const isOngoing = row.status === 'ongoing';
+                  const isCancelled = row.status === 'cancelled';
+                  const isPending = row.status === 'pending';
+                  const isScheduled = row.status === 'scheduled';
+                  const isCompleted = row.status === 'completed';
 
                   return (
                     <div key={`${row.code}-${row.time}`} className={`flex items-center gap-6 rounded-xl p-6 transition-all ${isCancelled ? 'opacity-60 bg-surface-container-lowest' : 'bg-surface-container-lowest hover:bg-slate-50 border border-transparent hover:border-outline-variant/20'}`}>
@@ -116,8 +112,14 @@ export default async function DashboardPage() {
                           {isOngoing && (
                             <span className="rounded-full bg-secondary-container px-2 py-0.5 text-[10px] font-bold text-on-secondary-container">ONGOING</span>
                           )}
+                          {isPending && (
+                            <span className="rounded-full bg-tertiary-fixed px-2 py-0.5 text-[10px] font-bold text-on-tertiary-fixed">AWAITING HOC</span>
+                          )}
                           {isScheduled && (
                             <span className="rounded-full bg-surface-container-highest px-2 py-0.5 text-[10px] font-bold text-on-surface-variant">SCHEDULED</span>
+                          )}
+                          {isCompleted && (
+                            <span className="rounded-full bg-outline-variant px-2 py-0.5 text-[10px] font-bold text-on-surface-variant">COMPLETED</span>
                           )}
                           {isCancelled && (
                             <span className="rounded-full bg-error-container px-2 py-0.5 text-[10px] font-bold uppercase text-on-error-container">Cancelled</span>
