@@ -230,49 +230,20 @@ export function AppChrome({
             <button
               className='relative -top-6 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-lg ring-4 ring-white'
               onClick={() => router.push('/hoc')}
+              aria-label='Open HOC Console'
               type='button'
             >
               <Zap className='h-5 w-5' />
-              <span className='sr-only'>Open HOC Console</span>
             </button>
           ) : (
-            <>
-              <button
-                aria-expanded={isMobileMenuOpen}
-                aria-haspopup='menu'
-                className='relative -top-6 flex h-14 w-14 items-center justify-center rounded-full bg-slate-900 text-white shadow-lg ring-4 ring-white transition-colors hover:bg-slate-800'
-                onClick={() => setIsMobileMenuOpen((open) => !open)}
-                type='button'
-              >
-                <MoreVertical className='h-5 w-5' />
-                <span className='sr-only'>Open quick menu</span>
-              </button>
-
-              {isMobileMenuOpen ? (
-                <>
-                  <button
-                    aria-label='Close quick menu'
-                    className='fixed inset-0 z-40 cursor-default bg-transparent'
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    type='button'
-                  />
-                  <div
-                    className='absolute bottom-full left-1/2 z-50 mb-3 w-40 -translate-x-1/2 overflow-hidden rounded-2xl border border-surface-container bg-white p-2 shadow-xl'
-                    role='menu'
-                  >
-                    <Link
-                      className='flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-primary'
-                      href='/materials'
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      role='menuitem'
-                    >
-                      <BookOpenText className='h-4 w-4' />
-                      Materials
-                    </Link>
-                  </div>
-                </>
-              ) : null}
-            </>
+            <button
+              className='relative -top-6 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-lg ring-4 ring-white'
+              onClick={() => router.push('/timetable')}
+              aria-label='Open live timetable'
+              type='button'
+            >
+              <CalendarDays className='h-5 w-5' />
+            </button>
           )}
         </div>
         <Link
@@ -284,15 +255,79 @@ export function AppChrome({
           <ClipboardList className='h-5 w-5' />
           <span className='text-[10px] font-medium'>Tasks</span>
         </Link>
-        <Link
-          className={`flex flex-col items-center justify-center gap-1 rounded-xl py-2 text-center ${
-            isActive('/updates') ? 'text-primary' : 'text-slate-400'
-          }`}
-          href='/updates'
-        >
-          <Bell className='h-5 w-5' />
-          <span className='text-[10px] font-medium'>Inbox</span>
-        </Link>
+        <div className='relative flex items-end justify-center'>
+          <button
+            aria-expanded={isMobileMenuOpen}
+            aria-haspopup='menu'
+            className={`flex flex-col items-center justify-center gap-1 rounded-xl py-2 text-center ${
+              isMobileMenuOpen ? 'text-primary' : 'text-slate-400'
+            }`}
+            onClick={() => setIsMobileMenuOpen((open) => !open)}
+            type='button'
+          >
+            <MoreVertical className='h-5 w-5' />
+            <span className='text-[10px] font-medium'>More</span>
+          </button>
+
+          {isMobileMenuOpen ? (
+            <>
+              <button
+                aria-label='Close quick menu'
+                className='fixed inset-0 z-40 cursor-default bg-transparent'
+                onClick={() => setIsMobileMenuOpen(false)}
+                type='button'
+              />
+              <div
+                className='absolute bottom-full right-0 z-50 mb-3 w-48 overflow-hidden rounded-2xl border border-surface-container bg-white p-2 shadow-xl'
+                role='menu'
+              >
+                <Link
+                  className='flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-primary'
+                  href='/materials'
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  role='menuitem'
+                >
+                  <BookOpenText className='h-4 w-4' />
+                  Materials
+                </Link>
+                <Link
+                  className='flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-primary'
+                  href='/updates'
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  role='menuitem'
+                >
+                  <Bell className='h-4 w-4' />
+                  Updates
+                </Link>
+                <Link
+                  className='flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-primary'
+                  href='/profile'
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  role='menuitem'
+                >
+                  <UserRound className='h-4 w-4' />
+                  Profile
+                </Link>
+                <button
+                  className='flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-error'
+                  onClick={async () => {
+                    setIsMobileMenuOpen(false);
+                    try {
+                      await fetch('/api/auth/supabase-signout', { method: 'POST' });
+                    } finally {
+                      await signOut({ callbackUrl: '/login' });
+                    }
+                  }}
+                  type='button'
+                  role='menuitem'
+                >
+                  <LogOut className='h-4 w-4' />
+                  Sign Out
+                </button>
+              </div>
+            </>
+          ) : null}
+        </div>
       </nav>
     </div>
   );
