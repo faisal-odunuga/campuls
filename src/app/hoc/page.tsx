@@ -26,6 +26,7 @@ export default async function HocPage() {
       searchPlaceholder="Search control actions..."
       userName={session.user.name ?? 'Campuls User'}
       userSubtitle={`${role ?? 'student'}${session.user.level ? ` • ${session.user.level}` : ''}`}
+      userRole="hoc"
     >
       <HocConsole snapshot={snapshot} />
     </AppChrome>

@@ -19,6 +19,7 @@ export default async function UpdatesPage() {
       searchPlaceholder="Search updates..."
       userName={session.user.name ?? 'Campuls User'}
       userSubtitle={`${session.user.role ?? 'student'}${session.user.level ? ` • ${session.user.level}` : ''}`}
+      userRole={session.user.role ?? 'student'}
     >
       <UpdatesBoard updates={snapshot.updates} />
     </AppChrome>

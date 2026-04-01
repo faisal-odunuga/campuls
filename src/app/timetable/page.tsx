@@ -19,6 +19,7 @@ export default async function TimetablePage() {
       searchPlaceholder='Search courses or venues...'
       userName={session.user.name ?? 'Campuls User'}
       userSubtitle={`${session.user.role ?? 'student'}${session.user.level ? ` • ${session.user.level}` : ''}`}
+      userRole={session.user.role ?? 'student'}
     >
       <TimetableBoard rows={snapshot.fullTimetable} />
     </AppChrome>

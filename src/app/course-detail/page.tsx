@@ -34,6 +34,7 @@ export default async function CourseDetailPage() {
       searchPlaceholder="Search course materials..."
       userName={session.user.name ?? 'Campuls User'}
       userSubtitle={`${session.user.role ?? 'student'}${session.user.level ? ` • ${session.user.level}` : ''}`}
+      userRole={session.user.role ?? 'student'}
     >
       <main className="mx-auto max-w-lg space-y-8 pb-24 md:max-w-3xl">
         <section className="bg-surface-container-low px-6 py-8">

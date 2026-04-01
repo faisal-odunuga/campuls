@@ -40,6 +40,7 @@ export default async function AssignmentsPage({
       searchPlaceholder="Search assignments..."
       userName={session.user.name ?? 'Campuls User'}
       userSubtitle={`${session.user.role ?? 'student'}${session.user.level ? ` • ${session.user.level}` : ''}`}
+      userRole={session.user.role ?? 'student'}
     >
       <main className="mx-auto max-w-lg space-y-8 md:max-w-3xl">
         <section className="mb-8">

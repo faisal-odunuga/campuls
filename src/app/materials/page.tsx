@@ -30,6 +30,7 @@ export default async function MaterialsPage() {
       searchPlaceholder='Search notes and files...'
       userName={session.user.name ?? 'Campuls User'}
       userSubtitle={`${session.user.role ?? 'student'}${session.user.level ? ` • ${session.user.level}` : ''}`}
+      userRole={session.user.role ?? 'student'}
     >
       <main>
         {/* Header Section */}

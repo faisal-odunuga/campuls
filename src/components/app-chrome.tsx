@@ -1,18 +1,17 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import {
-  ArrowRight,
   Bell,
   BookOpenText,
   CalendarDays,
   ClipboardList,
   LayoutDashboard,
   LogOut,
-  Menu,
+  MoreVertical,
   Search,
   UserRound,
   Zap,
@@ -50,6 +49,7 @@ type AppChromeProps = {
   userName?: string;
   userSubtitle?: string;
   avatarUrl?: string;
+  userRole?: 'student' | 'hoc';
 };
 
 export function AppChrome({
@@ -59,11 +59,17 @@ export function AppChrome({
   userName = 'Campuls User',
   userSubtitle = 'student',
   avatarUrl = '/icon.svg',
+  userRole = 'student',
 }: AppChromeProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const isActive = (href: string) => pathname === href;
+
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
 
   return (
     <div className='min-h-screen bg-surface text-on-surface antialiased'>
@@ -219,14 +225,56 @@ export function AppChrome({
           <CalendarDays className='h-5 w-5' />
           <span className='text-[10px] font-medium'>Schedule</span>
         </Link>
-        <button
-          className='relative -top-6 mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-lg ring-4 ring-white'
-          onClick={() => router.push('/hoc')}
-          type='button'
-        >
-          <Zap className='h-5 w-5' />
-          <span className='sr-only'>Open HOC Console</span>
-        </button>
+        <div className='relative flex items-end justify-center'>
+          {userRole === 'hoc' ? (
+            <button
+              className='relative -top-6 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-lg ring-4 ring-white'
+              onClick={() => router.push('/hoc')}
+              type='button'
+            >
+              <Zap className='h-5 w-5' />
+              <span className='sr-only'>Open HOC Console</span>
+            </button>
+          ) : (
+            <>
+              <button
+                aria-expanded={isMobileMenuOpen}
+                aria-haspopup='menu'
+                className='relative -top-6 flex h-14 w-14 items-center justify-center rounded-full bg-slate-900 text-white shadow-lg ring-4 ring-white transition-colors hover:bg-slate-800'
+                onClick={() => setIsMobileMenuOpen((open) => !open)}
+                type='button'
+              >
+                <MoreVertical className='h-5 w-5' />
+                <span className='sr-only'>Open quick menu</span>
+              </button>
+
+              {isMobileMenuOpen ? (
+                <>
+                  <button
+                    aria-label='Close quick menu'
+                    className='fixed inset-0 z-40 cursor-default bg-transparent'
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    type='button'
+                  />
+                  <div
+                    className='absolute bottom-full left-1/2 z-50 mb-3 w-40 -translate-x-1/2 overflow-hidden rounded-2xl border border-surface-container bg-white p-2 shadow-xl'
+                    role='menu'
+                  >
+                    <Link
+                      className='flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-primary'
+                      href='/materials'
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      role='menuitem'
+                    >
+                      <BookOpenText className='h-4 w-4' />
+                      Materials
+                    </Link>
+                  </div>
+                </>
+              ) : null}
+            </>
+          )}
+        </div>
         <Link
           className={`flex flex-col items-center justify-center gap-1 rounded-xl py-2 text-center ${
             isActive('/assignments') ? 'text-primary' : 'text-slate-400'

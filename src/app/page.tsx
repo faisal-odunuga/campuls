@@ -43,6 +43,7 @@ export default async function DashboardPage() {
       searchPlaceholder="Search courses, materials..."
       userName={session.user.name ?? 'Campuls User'}
       userSubtitle={`${session.user.role ?? 'student'}${session.user.level ? ` • ${session.user.level}` : ''}`}
+      userRole={session.user.role ?? 'student'}
     >
       <div className="mx-auto max-w-[1400px] ">
         {/* 'Class Started' Signal Banner */}

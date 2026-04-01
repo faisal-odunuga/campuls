@@ -18,6 +18,7 @@ export default async function ProfilePage() {
   );
   const displayName = profile?.name ?? session.user.name ?? 'Campuls User';
   const roleLabel = profile?.role === 'hoc' ? 'HOC' : 'Student';
+  const userRole = profile?.role === 'hoc' ? 'hoc' : 'student';
   const levelLabel = profile?.level ? `${profile.level}` : 'Not set';
 
   const fields = [
@@ -34,6 +35,7 @@ export default async function ProfilePage() {
       searchPlaceholder='Search settings...'
       userName={displayName}
       userSubtitle={`${roleLabel}${profile?.level ? ` • ${profile.level}` : ''}`}
+      userRole={userRole}
     >
       <div className='mx-auto max-w-4xl'>
         <div className='grid grid-cols-1 gap-8 md:grid-cols-12'>
