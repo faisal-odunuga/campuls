@@ -200,9 +200,9 @@ export function AppChrome({
         <section className='px-3 py-3 pb-20 md:pb-8 md:px-12'>{children}</section>
       </main>
 
-      <nav className='fixed bottom-0 left-0 right-0 z-50 grid grid-cols-6 items-stretch border-t border-surface-container bg-white px-2 py-2 md:hidden'>
+      <nav className='fixed bottom-0 left-0 right-0 z-50 grid grid-cols-5 items-end border-t border-surface-container bg-white px-2 pt-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] md:hidden'>
         <Link
-          className={`flex h-full flex-col items-center justify-center gap-1 rounded-xl py-2 text-center ${
+          className={`flex flex-col items-center justify-center gap-1 rounded-xl py-2 text-center ${
             isActive('/') ? 'text-primary' : 'text-slate-400'
           }`}
           href='/'
@@ -211,7 +211,7 @@ export function AppChrome({
           <span className='text-[10px] font-bold'>Home</span>
         </Link>
         <Link
-          className={`flex h-full flex-col items-center justify-center gap-1 rounded-xl py-2 text-center ${
+          className={`flex flex-col items-center justify-center gap-1 rounded-xl py-2 text-center ${
             isActive('/timetable') ? 'text-primary' : 'text-slate-400'
           }`}
           href='/timetable'
@@ -220,15 +220,15 @@ export function AppChrome({
           <span className='text-[10px] font-medium'>Schedule</span>
         </Link>
         <button
-          className='flex h-full flex-col items-center justify-center gap-1 rounded-xl bg-primary py-2 text-center text-white shadow-sm'
+          className='relative -top-6 mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-lg ring-4 ring-white'
           onClick={() => router.push('/hoc')}
           type='button'
         >
           <Zap className='h-5 w-5' />
-          <span className='text-[10px] font-bold'>HOC</span>
+          <span className='sr-only'>Open HOC Console</span>
         </button>
         <Link
-          className={`flex h-full flex-col items-center justify-center gap-1 rounded-xl py-2 text-center ${
+          className={`flex flex-col items-center justify-center gap-1 rounded-xl py-2 text-center ${
             isActive('/assignments') ? 'text-primary' : 'text-slate-400'
           }`}
           href='/assignments'
@@ -237,16 +237,7 @@ export function AppChrome({
           <span className='text-[10px] font-medium'>Tasks</span>
         </Link>
         <Link
-          className={`flex h-full flex-col items-center justify-center gap-1 rounded-xl py-2 text-center ${
-            isActive('/materials') ? 'text-primary' : 'text-slate-400'
-          }`}
-          href='/materials'
-        >
-          <BookOpenText className='h-5 w-5' />
-          <span className='text-[10px] font-medium'>Study</span>
-        </Link>
-        <Link
-          className={`flex h-full flex-col items-center justify-center gap-1 rounded-xl py-2 text-center ${
+          className={`flex flex-col items-center justify-center gap-1 rounded-xl py-2 text-center ${
             isActive('/updates') ? 'text-primary' : 'text-slate-400'
           }`}
           href='/updates'
