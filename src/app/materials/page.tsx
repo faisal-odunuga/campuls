@@ -1,7 +1,7 @@
 import { auth } from '@/auth';
-import { AppChrome } from '@/components/app-chrome';
-import { getDepartmentSnapshot } from '@/lib/supabase/queries';
-import { ChevronDown, Download, FolderOpen, FileText, Layers3, Files } from 'lucide-react';
+import { MaterialsModules } from '@/components/materials-modules';
+import { getMaterialsSnapshot } from '@/lib/supabase/queries';
+import { FileText, Layers3, Files } from 'lucide-react';
 import { redirect } from 'next/navigation';
 
 export default async function MaterialsPage() {
@@ -10,7 +10,7 @@ export default async function MaterialsPage() {
     redirect('/login');
   }
 
-  const snapshot = await getDepartmentSnapshot(session.supabaseAccessToken);
+  const snapshot = await getMaterialsSnapshot(session.supabaseAccessToken);
   const moduleCourses = Array.from(
     new Map(
       snapshot.materials.map((material) => {
@@ -24,23 +24,18 @@ export default async function MaterialsPage() {
   const totalCourses = moduleCourses.length;
 
   return (
-    <AppChrome
-      avatarUrl={session.user.image ?? undefined}
-      title='Materials Hub'
-      searchPlaceholder='Search notes and files...'
-      userName={session.user.name ?? 'Campuls User'}
-      userSubtitle={`${session.user.role ?? 'student'}${session.user.level ? ` • ${session.user.level}` : ''}`}
-      userRole={session.user.role ?? 'student'}
-    >
+    <>
       <main>
         {/* Header Section */}
         <section className='mb-8'>
-          <h2 className='mb-2 font-headline text-3xl font-extrabold tracking-tight text-primary'>
-            Materials Hub
-          </h2>
-          <p className='text-sm font-medium text-on-surface-variant'>
-            Course files and notes pulled from your department records.
-          </p>
+          <div>
+            <h2 className='mb-2 font-headline text-3xl font-extrabold tracking-tight text-primary'>
+              Materials Hub
+            </h2>
+            <p className='text-sm font-medium text-on-surface-variant'>
+              Course files and materials pulled from your department records.
+            </p>
+          </div>
         </section>
 
         <section className='mb-10 grid grid-cols-1 gap-4 md:grid-cols-3'>
@@ -59,7 +54,7 @@ export default async function MaterialsPage() {
               </div>
             </div>
             <p className='text-xs text-on-surface-variant'>
-              Notes stored in Supabase and linked to each course.
+              Materials stored in Supabase and linked to each course.
             </p>
           </div>
 
@@ -142,74 +137,8 @@ export default async function MaterialsPage() {
           </div>
         </section>
 
-        {/* Course Modules List */}
-        <div className='space-y-4'>
-          <h3 className='mb-4 font-headline text-xl font-bold text-on-surface'>Course Modules</h3>
-          {moduleCourses.length ? (
-            moduleCourses.map((course) => {
-              const courseCode = course.includes(' • ') ? course.split(' • ')[0] : course;
-              const courseName = course.includes(' • ') ? course.split(' • ')[1] : course;
-              const courseMaterials = snapshot.materials.filter((material) =>
-                material.course.startsWith(courseCode),
-              );
-
-              return (
-                <div
-                  key={course}
-                  className='overflow-hidden rounded-xl bg-surface-container-low transition-all duration-300'
-                >
-                  <div className='flex items-center justify-between p-5'>
-                    <div className='flex items-center gap-4'>
-                      <div className='flex h-12 w-12 items-center justify-center rounded-xl bg-surface-container-lowest text-primary shadow-sm'>
-                        <FolderOpen className='h-6 w-6' />
-                      </div>
-                        <div>
-                          <h3 className='font-headline text-lg font-bold leading-tight text-primary'>
-                            {courseCode}
-                          </h3>
-                          <p className='text-xs font-medium text-on-surface-variant'>
-                            {courseName} • {courseMaterials.length} Files
-                          </p>
-                        </div>
-                      </div>
-                    <ChevronDown className='h-4 w-4 text-outline' />
-                  </div>
-
-                  <div className='space-y-3 px-5 pb-5 pt-1'>
-                    {courseMaterials.map((file) => (
-                      <div
-                        key={file.id}
-                        className='group flex items-center justify-between rounded-lg bg-surface-container-lowest p-4'
-                      >
-                        <div className='flex items-center gap-3'>
-                          <FileText className='h-5 w-5 text-primary' />
-                          <div>
-                            <p className='text-sm font-semibold text-primary'>{file.title}</p>
-                            <p className='text-[11px] font-medium text-outline'>
-                              {file.time} • {file.size}
-                            </p>
-                          </div>
-                        </div>
-                        <button className='flex h-8 w-8 items-center justify-center rounded-full bg-surface-container text-primary transition-all hover:bg-primary hover:text-white' type='button'>
-                          <Download className='h-4 w-4' />
-                        </button>
-                      </div>
-                    ))}
-                    <button className='mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-3 font-label text-xs font-bold uppercase tracking-widest text-white' type='button'>
-                      <Download className='h-4 w-4' />
-                      Download All
-                    </button>
-                  </div>
-                </div>
-              );
-            })
-          ) : (
-            <div className='rounded-xl border border-surface-container-highest bg-surface-container-lowest p-6 text-sm text-on-surface-variant shadow-sm'>
-              No course modules uploaded yet.
-            </div>
-          )}
-        </div>
+        <MaterialsModules moduleCourses={moduleCourses} materials={snapshot.materials} />
       </main>
-    </AppChrome>
+    </>
   );
 }

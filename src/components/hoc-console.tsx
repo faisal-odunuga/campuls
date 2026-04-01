@@ -15,65 +15,20 @@ import {
   Play,
   TriangleAlert
 } from 'lucide-react';
-import type { DepartmentSnapshot } from '@/lib/supabase/queries';
+import type { HocSnapshot } from '@/lib/supabase/queries';
+import {
+  formatNoticeCategory,
+  getCardStyles,
+  getIconTone,
+  getStatusLabel,
+  noticeCategories,
+  type NoticeCategory,
+  type SessionRow,
+} from '@/components/hoc-console.utils';
 
 type HocConsoleProps = {
-  snapshot: DepartmentSnapshot;
+  snapshot: HocSnapshot;
 };
-
-type SessionRow = DepartmentSnapshot['timetable'][number];
-type NoticeCategory = 'announcement' | 'assignment' | 'exam' | 'general';
-
-type NoticeCategoryOption = {
-  value: NoticeCategory;
-  label: string;
-  tone: 'neutral' | 'primary' | 'warning';
-};
-
-const noticeCategories: NoticeCategoryOption[] = [
-  { value: 'announcement', label: 'Announcement', tone: 'neutral' },
-  { value: 'assignment', label: 'Assignment', tone: 'primary' },
-  { value: 'exam', label: 'Exam', tone: 'warning' },
-  { value: 'general', label: 'General', tone: 'neutral' }
-];
-
-function getStatusLabel(row: SessionRow) {
-  if (row.status === 'ONGOING') return 'Live Now';
-  if (row.status === 'UP NEXT' || row.status === 'SCHEDULED') return 'Upcoming';
-  if (row.status === 'POSTPONED') return 'Postponed';
-  if (row.status === 'CANCELLED') return 'Cancelled';
-  return 'Completed';
-}
-
-function getCardStyles(row: SessionRow) {
-  if (row.status === 'ONGOING') {
-    return 'bg-surface-container-lowest p-6 ring-2 ring-secondary/20 shadow-xl shadow-secondary/5';
-  }
-
-  if (row.status === 'POSTPONED') {
-    return 'bg-surface-container p-6 opacity-90 border border-tertiary-fixed/25';
-  }
-
-  if (row.status === 'CANCELLED') {
-    return 'bg-error-container/15 p-6 border border-error-container/20 opacity-70';
-  }
-
-  return 'bg-surface-container-lowest p-6 hover:bg-white transition-all duration-300';
-}
-
-function getIconTone(row: SessionRow) {
-  if (row.status === 'ONGOING') return 'bg-secondary-fixed text-on-secondary-fixed';
-  if (row.status === 'POSTPONED') return 'bg-tertiary-fixed text-on-tertiary-fixed';
-  if (row.status === 'CANCELLED') return 'bg-error-container text-on-error-container';
-  return 'bg-primary-fixed text-primary';
-}
-
-function formatNoticeCategory(value: string) {
-  return value
-    ?.replace(/_/g, ' ')
-    .toLowerCase()
-    .replace(/\b\w/g, (letter) => letter.toUpperCase());
-}
 
 export function HocConsole({ snapshot }: HocConsoleProps) {
   const noticeRef = useRef<HTMLTextAreaElement | null>(null);

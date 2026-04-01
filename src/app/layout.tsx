@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 import { auth } from '@/auth';
+import { AppShell } from '@/components/app-shell';
 import { Providers } from '@/components/providers';
 import { PwaBoot } from '@/components/pwa-boot';
 
@@ -36,7 +37,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         </a>
         <Providers session={session}>
           <PwaBoot />
-          {children}
+          <AppShell session={session}>{children}</AppShell>
         </Providers>
       </body>
     </html>

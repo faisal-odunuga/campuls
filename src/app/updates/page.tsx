@@ -1,7 +1,7 @@
 import { auth } from '@/auth';
-import { AppChrome } from '@/components/app-chrome';
 import { UpdatesBoard } from '@/components/updates-board';
-import { getDepartmentSnapshot } from '@/lib/supabase/queries';
+import { RealtimeRefresh } from '@/components/realtime-refresh';
+import { getUpdatesSnapshot } from '@/lib/supabase/queries';
 import { redirect } from 'next/navigation';
 
 export default async function UpdatesPage() {
@@ -10,18 +10,15 @@ export default async function UpdatesPage() {
     redirect('/login');
   }
 
-  const snapshot = await getDepartmentSnapshot(session.supabaseAccessToken);
+  const snapshot = await getUpdatesSnapshot(session.supabaseAccessToken);
 
   return (
-    <AppChrome
-      avatarUrl={session.user.image ?? undefined}
-      title="Updates Board"
-      searchPlaceholder="Search updates..."
-      userName={session.user.name ?? 'Campuls User'}
-      userSubtitle={`${session.user.role ?? 'student'}${session.user.level ? ` • ${session.user.level}` : ''}`}
-      userRole={session.user.role ?? 'student'}
-    >
+    <>
+      <RealtimeRefresh
+        accessToken={session.supabaseAccessToken}
+        tables={['updates_board']}
+      />
       <UpdatesBoard updates={snapshot.updates} />
-    </AppChrome>
+    </>
   );
 }

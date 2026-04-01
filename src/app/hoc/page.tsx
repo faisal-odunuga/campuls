@@ -1,7 +1,7 @@
 import { auth } from '@/auth';
-import { AppChrome } from '@/components/app-chrome';
 import { HocConsole } from '@/components/hoc-console';
-import { getDepartmentSnapshot, getUserProfile } from '@/lib/supabase/queries';
+import { RealtimeRefresh } from '@/components/realtime-refresh';
+import { getHocSnapshot, getUserProfile } from '@/lib/supabase/queries';
 import { redirect } from 'next/navigation';
 
 export default async function HocPage() {
@@ -17,18 +17,15 @@ export default async function HocPage() {
     redirect('/');
   }
 
-  const snapshot = await getDepartmentSnapshot(session.supabaseAccessToken);
+  const snapshot = await getHocSnapshot(session.supabaseAccessToken);
 
   return (
-    <AppChrome
-      avatarUrl={session.user.image ?? undefined}
-      title="HOC Control Panel"
-      searchPlaceholder="Search control actions..."
-      userName={session.user.name ?? 'Campuls User'}
-      userSubtitle={`${role ?? 'student'}${session.user.level ? ` • ${session.user.level}` : ''}`}
-      userRole="hoc"
-    >
+    <>
+      <RealtimeRefresh
+        accessToken={session.supabaseAccessToken}
+        tables={['timetable', 'class_sessions', 'updates_board', 'materials']}
+      />
       <HocConsole snapshot={snapshot} />
-    </AppChrome>
+    </>
   );
 }

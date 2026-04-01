@@ -1,5 +1,4 @@
 import { auth } from '@/auth';
-import { AppChrome } from '@/components/app-chrome';
 import { getUserProfile } from '@/lib/supabase/queries';
 import { Pencil, Settings2 } from 'lucide-react';
 import Image from 'next/image';
@@ -29,14 +28,7 @@ export default async function ProfilePage() {
   ];
 
   return (
-    <AppChrome
-      avatarUrl={session.user.image ?? undefined}
-      title='Account Settings'
-      searchPlaceholder='Search settings...'
-      userName={displayName}
-      userSubtitle={`${roleLabel}${profile?.level ? ` • ${profile.level}` : ''}`}
-      userRole={userRole}
-    >
+    <>
       <div className='mx-auto max-w-4xl'>
         <div className='grid grid-cols-1 gap-8 md:grid-cols-12'>
           <div className='md:col-span-4'>
@@ -97,6 +89,6 @@ export default async function ProfilePage() {
           </div>
         </div>
       </div>
-    </AppChrome>
+    </>
   );
 }

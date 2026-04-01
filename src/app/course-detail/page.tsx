@@ -1,6 +1,5 @@
 import { auth } from '@/auth';
-import { AppChrome } from '@/components/app-chrome';
-import { getDepartmentSnapshot } from '@/lib/supabase/queries';
+import { getCourseDetailSnapshot } from '@/lib/supabase/queries';
 import { ArrowLeft, Clock3, MapPin, RadioTower } from 'lucide-react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -11,7 +10,7 @@ export default async function CourseDetailPage() {
     redirect('/login');
   }
 
-  const snapshot = await getDepartmentSnapshot(session.supabaseAccessToken);
+  const snapshot = await getCourseDetailSnapshot(session.supabaseAccessToken);
   const active = snapshot.activeSession;
   const totalSessions = snapshot.timetable.length;
   const attendedCount = snapshot.timetable.filter(
@@ -28,14 +27,7 @@ export default async function CourseDetailPage() {
           : 'Poor';
 
   return (
-    <AppChrome
-      avatarUrl={session.user.image ?? undefined}
-      title="Course View"
-      searchPlaceholder="Search course materials..."
-      userName={session.user.name ?? 'Campuls User'}
-      userSubtitle={`${session.user.role ?? 'student'}${session.user.level ? ` • ${session.user.level}` : ''}`}
-      userRole={session.user.role ?? 'student'}
-    >
+    <>
       <main className="mx-auto max-w-lg space-y-8 pb-24 md:max-w-3xl">
         <section className="bg-surface-container-low px-6 py-8">
           <div className="flex flex-col gap-1">
@@ -174,6 +166,6 @@ export default async function CourseDetailPage() {
           </div>
         </section>
       </main>
-    </AppChrome>
+    </>
   );
 }

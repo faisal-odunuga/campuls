@@ -1,6 +1,5 @@
 import { auth } from '@/auth';
-import { AppChrome } from '@/components/app-chrome';
-import { getDepartmentSnapshot } from '@/lib/supabase/queries';
+import { getAssignmentsSnapshot } from '@/lib/supabase/queries';
 import { Clock3, Search, SlidersHorizontal, UploadCloud } from 'lucide-react';
 import { redirect } from 'next/navigation';
 
@@ -14,7 +13,7 @@ export default async function AssignmentsPage({
     redirect('/login');
   }
 
-  const snapshot = await getDepartmentSnapshot(session.supabaseAccessToken);
+  const snapshot = await getAssignmentsSnapshot(session.supabaseAccessToken);
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const query =
     typeof resolvedSearchParams?.q === 'string' ? resolvedSearchParams.q.trim().toLowerCase() : '';
@@ -34,14 +33,7 @@ export default async function AssignmentsPage({
   const totalPending = filteredAssignments.reduce((total, group) => total + group.items.length, 0);
 
   return (
-    <AppChrome
-      avatarUrl={session.user.image ?? undefined}
-      title="Assignments & Tasks"
-      searchPlaceholder="Search assignments..."
-      userName={session.user.name ?? 'Campuls User'}
-      userSubtitle={`${session.user.role ?? 'student'}${session.user.level ? ` • ${session.user.level}` : ''}`}
-      userRole={session.user.role ?? 'student'}
-    >
+    <>
       <main className="mx-auto max-w-lg space-y-8 md:max-w-3xl">
         <section className="mb-8">
           <p className="mb-1 font-['Inter'] text-[10px] font-medium tracking-wide text-slate-500 uppercase">
@@ -146,6 +138,6 @@ export default async function AssignmentsPage({
           )}
         </div>
       </main>
-    </AppChrome>
+    </>
   );
 }

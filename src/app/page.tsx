@@ -2,8 +2,8 @@ export const dynamic = 'force-dynamic';
 import { auth } from '@/auth';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { AppChrome } from '@/components/app-chrome';
-import { getDepartmentSnapshot } from '@/lib/supabase/queries';
+import { RealtimeRefresh } from '@/components/realtime-refresh';
+import { getDashboardSnapshot } from '@/lib/supabase/queries';
 import {
   ArrowRight,
   CalendarX,
@@ -20,7 +20,7 @@ export default async function DashboardPage() {
     redirect('/login');
   }
 
-  const snapshot = await getDepartmentSnapshot(session.supabaseAccessToken);
+  const snapshot = await getDashboardSnapshot(session.supabaseAccessToken);
   const activeSession = snapshot.activeSession;
   // console.log(activeSession)
   const todayLabel = new Intl.DateTimeFormat('en-US', {
@@ -37,14 +37,11 @@ export default async function DashboardPage() {
   const todaysSchedule = snapshot.timetable;
 
   return (
-    <AppChrome
-      title="Dashboard"
-      avatarUrl={session.user.image ?? undefined}
-      searchPlaceholder="Search courses, materials..."
-      userName={session.user.name ?? 'Campuls User'}
-      userSubtitle={`${session.user.role ?? 'student'}${session.user.level ? ` • ${session.user.level}` : ''}`}
-      userRole={session.user.role ?? 'student'}
-    >
+    <>
+      <RealtimeRefresh
+        accessToken={session.supabaseAccessToken}
+        tables={['timetable', 'class_sessions', 'updates_board', 'materials']}
+      />
       <div className="mx-auto max-w-[1400px] ">
         {/* 'Class Started' Signal Banner */}
         <section className="mb-10">
@@ -227,7 +224,7 @@ export default async function DashboardPage() {
           </div>
         </div>
       </div>
-    </AppChrome>
+    </>
   );
 }
 
